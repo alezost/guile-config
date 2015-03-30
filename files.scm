@@ -23,12 +23,28 @@
 ;; This file provides several additional procedures to perform various
 ;; actions on files.
 
+;; The following procedures originate from (guix build utils) module:
+;;
+;; - mkdir-with-parents (from "mkdir-p");
+;; - find-files;
+;; - delete-file-recursively.
+
 ;;; Code:
 
 (define-module (al files)
+  #:use-module (ice-9 match)
+  #:use-module (ice-9 ftw)
+  #:use-module (ice-9 regex)
+  #:use-module (ice-9 popen)
+  #:use-module (ice-9 rdelim)
   #:export (symlink?
             file-exists??
-            unique-filename))
+            mkdir-with-parents
+            readlink-full
+            unique-filename
+            find-files
+            find-matching-files
+            delete-file-recursively))
 
 (define (symlink? file)
   "Return #t if FILE is a symbolic link."
@@ -44,11 +60,108 @@ target)."
         (lambda () (->bool (readlink filename)))
         (const #f))))
 
+(define (mkdir-with-parents dir)
+  "Create directory DIR and all its ancestors."
+  (let ((not-slash (char-set-complement (char-set #\/))))
+    (let loop ((components (string-tokenize dir not-slash))
+               (root ""))
+      (match components
+        ((head tail ...)
+         (let ((file (string-append root "/" head)))
+           (unless (file-exists? file)
+             (mkdir file))
+           (loop tail file)))
+        (_ #t)))))
+
+(define (readlink-full path)
+  "Resolve symlink PATH canonically (until the real file).
+Follow every symlink in every component of PATH recursively.
+All components must exist."
+  ;; XXX Should be written in guile using 'readlink' procedure, but it
+  ;; requires messing with all those ".." and "." in relative links.
+  (let* ((port (open-pipe* OPEN_READ
+                           "readlink" "--canonicalize" path))
+         (file (read-line port)))
+    (close-pipe port)
+    file))
+
 (define* (unique-filename basename #:optional (i 1))
   "Return unique filename based on BASENAME and a number I."
   (let ((filename (string-append basename (number->string i))))
     (if (file-exists? filename)
         (unique-filename basename (+ i 1))
         filename)))
+
+(define* (find-files dir regexp #:key enter-tree? follow-links?)
+  "Return list of files in DIR whose basenames match REGEXP.
+If ENTER-TREE? is #f, scan DIR only (without subdirs), otherwise
+traverse the whole DIR tree.
+If FOLLOW-LINKS? is #f, do not follow symbolic links."
+  (define rx
+    (if (regexp? regexp)
+        regexp
+        (make-regexp regexp)))
+
+  (define (enter? file stat result)
+    (or (string= file dir)
+        enter-tree?))
+
+  (define (leaf-or-skip file stat result)
+    (if (regexp-exec rx (basename file))
+        (cons file result)
+        result))
+
+  (define (up-or-down file stat result)
+    result)
+
+  (define (error file stat errno result)
+    (format (current-error-port)
+            "Warning: ~a: ~a~%"
+            file (strerror errno))
+    result)
+
+  (let ((stat (if follow-links? stat lstat)))
+    (file-system-fold enter? leaf-or-skip up-or-down
+                      up-or-down leaf-or-skip error
+                      '() dir stat)))
+
+(define (find-matching-files filename-part)
+  "Return list of files whose full names begin with FILENAME-PART.
+For example, (find-matching-files \"/foo/bar\") finds \"/foo/bar\",
+\"/foo/bar.scm\", \"/foo/barman\", etc."
+  (let ((dir (dirname filename-part)))
+    (if (file-exists? dir)
+        (let ((dir (if (symlink? dir)
+                       (readlink-full dir)
+                       dir))
+              (rx (string-append "\\`"
+                                 (regexp-quote
+                                  (basename filename-part)))))
+          (find-files dir rx))
+        (begin
+          (format (current-error-port)
+                  "Warning: No such directory: ~a~%" dir)
+          '()))))
+
+(define* (delete-file-recursively dir)
+  "Delete DIR recursively, like `rm -rf', without following symlinks."
+  (define ok (const #t))
+
+  (define (del-file file stat result)
+    (delete-file file)
+    (format #t "File '~a' has been deleted.~%" file))
+
+  (define (del-dir dir stat result)
+    (rmdir dir)
+    (format #t "Directory '~a' has been deleted.~%" dir))
+
+  (define (error file stat errno result)
+    (format (current-error-port)
+            "Warning: failed to delete ~a: ~a~%"
+            file (strerror errno)))
+
+  ;; Use lstat to make sure that symlinks are not followed.
+  (file-system-fold ok del-file ok del-dir ok error
+                    #t dir lstat))
 
 ;;; files.scm ends here

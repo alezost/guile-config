@@ -64,7 +64,9 @@ returned by NAME-PROC procedure."
     (if (link-exists? link)
         (message* "A proper link '~a' already exists."
                   (link-string link))
-        (begin
+        (let ((dir (dirname filename)))
+          (unless (file-exists? dir)
+            (mkdir-with-parents dir))
           (when (file-exists?? filename)
             (rename-file-unique filename))
           (create-link link)

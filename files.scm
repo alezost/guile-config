@@ -44,7 +44,8 @@
             unique-filename
             find-files
             find-matching-files
-            delete-file-recursively))
+            delete-file-recursively
+            read-file))
 
 (define (symlink? file)
   "Return #t if FILE is a symbolic link."
@@ -163,5 +164,12 @@ For example, (find-matching-files \"/foo/bar\") finds \"/foo/bar\",
   ;; Use lstat to make sure that symlinks are not followed.
   (file-system-fold ok del-file ok del-dir ok error
                     #t dir lstat))
+
+(define (read-file filename)
+  "Return a string with the contents of FILENAME."
+  (call-with-input-file filename
+    (lambda (port)
+      (peek-char port)
+      (drain-input port))))
 
 ;;; files.scm ends here

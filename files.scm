@@ -35,12 +35,9 @@
   #:use-module (ice-9 match)
   #:use-module (ice-9 ftw)
   #:use-module (ice-9 regex)
-  #:use-module (ice-9 popen)
-  #:use-module (ice-9 rdelim)
   #:export (symlink?
             file-exists??
             mkdir-with-parents
-            readlink-full
             unique-filename
             find-files
             find-matching-files
@@ -73,18 +70,6 @@ target)."
              (mkdir file))
            (loop tail file)))
         (_ #t)))))
-
-(define (readlink-full path)
-  "Resolve symlink PATH canonically (until the real file).
-Follow every symlink in every component of PATH recursively.
-All components must exist."
-  ;; XXX Should be written in guile using 'readlink' procedure, but it
-  ;; requires messing with all those ".." and "." in relative links.
-  (let* ((port (open-pipe* OPEN_READ
-                           "readlink" "--canonicalize" path))
-         (file (read-line port)))
-    (close-pipe port)
-    file))
 
 (define* (unique-filename basename #:optional (i 1))
   "Return unique filename based on BASENAME and a number I."
@@ -133,7 +118,7 @@ For example, (find-matching-files \"/foo/bar\") finds \"/foo/bar\",
   (let ((dir (dirname filename-part)))
     (if (file-exists? dir)
         (let ((dir (if (symlink? dir)
-                       (readlink-full dir)
+                       (canonicalize-path dir)
                        dir))
               (rx (string-append "\\`"
                                  (regexp-quote

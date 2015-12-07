@@ -25,25 +25,45 @@
 ;;; Code:
 
 (define-module (al places)
+  #:use-module (al files)
   #:export (home-file
-            config-file))
+            config-file
+            guix-config-file
+            guix-system-file
+            guix-profile-file
+            guix-manifest-file))
 
-(define home-file
-  (let ((home (getenv "HOME")))
-    (lambda* (#:optional filename)
-      "Return file path by appending FILENAME to a home directory.
-If FILENAME is not specified, return the home directory."
-      (if filename
-          (string-append home "/" filename)
-          home))))
+(define (home-file . file-parts)
+  "Return file name from my home directory."
+  (apply build-file-name identity (getenv "HOME") file-parts))
 
-(define* (config-file #:optional filename)
-  "Return file path by appending FILENAME to a config directory.
-If FILENAME is not specified, return the config directory."
-  (let* ((config-dir "config")
-         (rel-name (if filename
-                       (string-append config-dir "/" filename)
-                       config-dir)))
-    (home-file rel-name)))
+(define (config-file . file-parts)
+  "Return file name from my config directory."
+  (apply build-file-name home-file "config" file-parts))
+
+(define (guix-config-file . file-parts)
+  "Return file name from my Guix config directory."
+  (apply build-file-name config-file "guix" file-parts))
+
+(define* (guix-system-file #:optional name)
+  "Return file name of my Guix system NAME."
+  (apply build-file-name guix-config-file "system-config"
+         (if name
+             (list (string-append "os-" name ".scm"))
+             '())))
+
+(define* (guix-manifest-file #:optional name)
+  "Return file name of my Guix manifest file for profile NAME."
+  (apply build-file-name guix-config-file "user-config"
+         (if name
+             (list (string-append "manifest-" name ".scm"))
+             '())))
+
+(define* (guix-profile-file #:optional name)
+  "Return file name of my Guix profile NAME."
+  (apply build-file-name home-file ".guix-profiles"
+         (if name
+             (list name name)
+             '())))
 
 ;;; places.scm ends here

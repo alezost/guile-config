@@ -27,6 +27,7 @@
 (define-module (al places)
   #:use-module (al files)
   #:export (home-file
+            bin-file
             config-file
             guix-config-file
             guix-script-file
@@ -37,6 +38,10 @@
 (define (home-file . file-parts)
   "Return file name from my home directory."
   (apply build-file-name identity (getenv "HOME") file-parts))
+
+(define (bin-file . file-parts)
+  "Return file name from my bin directory."
+  (apply build-file-name home-file "bin" file-parts))
 
 (define (config-file . file-parts)
   "Return file name from my config directory."

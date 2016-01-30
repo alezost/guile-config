@@ -26,23 +26,24 @@
 ;;; Code:
 
 (define-module (al configs)
-  #:use-module (srfi srfi-9)
   #:use-module (srfi srfi-26)
   #:use-module (al files)
   #:use-module (al links)
   #:use-module (al messages)
+  #:use-module (al records)
   #:export (make-config
+            config*
             config?
             config-name
             config-links
             show-config
             deploy-config))
 
-(define-record-type <config>
-  (make-config name links)
+(define-record-type* <config>
+  make-config config*
   config?
-  (name  config-name)
-  (links config-links))
+  (name  config-name #f)
+  (links config-links #f))
 
 (define (show-link link)
   "Display information about LINK record."

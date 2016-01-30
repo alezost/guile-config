@@ -26,9 +26,10 @@
 ;;; Code:
 
 (define-module (al links)
-  #:use-module (srfi srfi-9)
   #:use-module (al files)
+  #:use-module (al records)
   #:export (make-link
+            link*
             link?
             link-target
             link-filename
@@ -36,11 +37,11 @@
             link-exists?
             create-link))
 
-(define-record-type <link>
-  (make-link filename target)
+(define-record-type* <link>
+  make-link link*
   link?
-  (filename link-filename)
-  (target   link-target))
+  (filename link-filename #f)
+  (target   link-target #f))
 
 (define (link-string link)
   "Return a string with printable representation of LINK record."

@@ -1,6 +1,6 @@
 ;;; files.scm --- Procedures for working with files
 
-;; Copyright © 2015 Alex Kost
+;; Copyright © 2015, 2016 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created:  6 Mar 2015
@@ -26,6 +26,7 @@
 ;; The following procedures originate from (guix build utils) module:
 ;;
 ;; - mkdir-with-parents (from "mkdir-p");
+;; - with-directory-excursion;
 ;; - find-files;
 ;; - delete-file-recursively.
 
@@ -40,6 +41,7 @@
             symlink?
             file-exists??
             mkdir-with-parents
+            with-directory-excursion
             unique-filename
             find-files
             find-matching-files
@@ -80,6 +82,17 @@ target)."
              (mkdir file))
            (loop tail file)))
         (_ #t)))))
+
+(define-syntax-rule (with-directory-excursion dir body ...)
+  "Run BODY with DIR as the process's current directory."
+  (let ((init (getcwd)))
+   (dynamic-wind
+     (lambda ()
+       (chdir dir))
+     (lambda ()
+       body ...)
+     (lambda ()
+       (chdir init)))))
 
 (define* (unique-filename basename #:optional (i 1))
   "Return unique filename based on BASENAME and a number I."

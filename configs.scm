@@ -1,6 +1,6 @@
 ;;; configs.scm --- Procedures for working with configs
 
-;; Copyright © 2015 Alex Kost
+;; Copyright © 2015, 2016 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created:  6 Mar 2015
@@ -58,20 +58,26 @@ returned by NAME-PROC procedure."
   (define (rename-file-unique filename)
     (let ((new-name (name-proc filename)))
       (rename-file filename new-name)
-      (message* "Old file has been renamed into '~a'." new-name)))
+      (message* "Old file has been renamed to '~a'." new-name)))
 
-  (let ((filename (link-filename link)))
-    (if (link-exists? link)
-        (message* "A proper link '~a' already exists."
-                  (link-string link))
-        (let ((dir (dirname filename)))
-          (unless (file-exists? dir)
-            (mkdir-with-parents dir))
-          (when (file-exists?? filename)
-            (rename-file-unique filename))
-          (create-link link)
-          (message* "Link '~a' has been created."
-                    (link-string link))))))
+  (if (link-exists? link)
+      (message* "A proper link already exists: '~a'."
+                (link-string link))
+      (let* ((filename (link-filename link))
+             (target   (link-target link))
+             (dir      (dirname filename)))
+        (unless (file-exists? dir)
+          (mkdir-with-parents dir))
+        (if (with-directory-excursion dir
+              (file-exists? target))
+            (begin
+              (when (file-exists?? filename)
+                (rename-file-unique filename))
+              (create-link link)
+              (message* "Link has been created: '~a'."
+                        (link-string link)))
+            (message* "Target does not exists: '~a'."
+                      target)))))
 
 (define (show-config config)
   "Show info about CONFIG record."

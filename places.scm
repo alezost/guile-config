@@ -1,6 +1,6 @@
 ;;; places.scm --- Where my files are placed
 
-;; Copyright © 2015 Alex Kost
+;; Copyright © 2015, 2016 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created: 14 Feb 2015
@@ -29,6 +29,7 @@
   #:export (home-file
             config-file
             guix-config-file
+            guix-script-file
             guix-system-file
             guix-profile-file
             guix-manifest-file))
@@ -44,6 +45,13 @@
 (define (guix-config-file . file-parts)
   "Return file name from my Guix config directory."
   (apply build-file-name config-file "guix" file-parts))
+
+(define* (guix-script-file #:optional name)
+  "Return file name of my Guix script NAME."
+  (apply build-file-name guix-config-file "scripts"
+         (if name
+             (list name)
+             '())))
 
 (define* (guix-system-file #:optional name)
   "Return file name of my Guix system NAME."

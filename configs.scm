@@ -31,19 +31,29 @@
   #:use-module (al links)
   #:use-module (al messages)
   #:use-module (al records)
+  #:use-module (al sources)
   #:export (make-config
             config*
             config?
             config-name
+            config-source
             config-links
             show-config
+            fetch-config
             deploy-config))
 
 (define-record-type* <config>
   make-config config*
   config?
-  (name  config-name #f)
-  (links config-links #f))
+  (name   config-name #f)
+  (source config-source #f)
+  (links  config-links #f))
+
+(define (show-source source)
+  "Display information about SOURCE record."
+  (define message* (message-proc #:indent-level 1))
+  (message* "Source URI: ~a" (source-uri source))
+  (message* "Directory:  ~a" (source-directory source)))
 
 (define (show-link link)
   "Display information about LINK record."
@@ -83,10 +93,25 @@ returned by NAME-PROC procedure."
 (define (show-config config)
   "Show info about CONFIG record."
   (define message* (message-proc #:indent-level 0))
-  (let ((name  (config-name config))
-        (links (config-links config)))
+  (let ((name   (config-name config))
+        (source (config-source config))
+        (links  (config-links config)))
     (message* "'~a' configuration:" name)
+    (when source (show-source source))
     (map show-link links)))
+
+(define (fetch-config config)
+  "Fetch source of CONFIG record."
+  (let ((source (config-source config)))
+    (when source
+      (let ((message0 (message-proc #:indent-level 0))
+            (message1 (message-proc #:indent-level 1))
+            (name     (config-name config))
+            (dir      (source-directory source)))
+        (message0 "Fetching '~a' configuration source..." name)
+        (if (file-exists? dir)
+            (message1 "Source directory already exists: '~a'." dir)
+            (fetch-source source))))))
 
 (define* (deploy-config config #:optional (name-proc unique-filename))
   "Deploy (create symlinks) CONFIG record.

@@ -91,10 +91,11 @@ returned by NAME-PROC procedure."
 (define* (deploy-config config #:optional (name-proc unique-filename))
   "Deploy (create symlinks) CONFIG record.
 See 'deploy-link' for the meaning of NAME-PROC."
-  (define message* (message-proc #:indent-level 0))
-  (let ((name  (config-name config))
-        (links (config-links config)))
-    (message* "Deploying '~a' configuration..." name)
-    (map (cut deploy-link <> name-proc) links)))
+  (let ((links (config-links config)))
+    (when links
+      (let ((message0 (message-proc #:indent-level 0))
+            (name     (config-name config)))
+        (message0 "Deploying '~a' configuration..." name)
+        (map (cut deploy-link <> name-proc) links)))))
 
 ;;; config.scm ends here

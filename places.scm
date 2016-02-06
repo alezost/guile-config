@@ -25,7 +25,7 @@
 ;;; Code:
 
 (define-module (al places)
-  #:use-module (al files)
+  #:use-module (al utils)
   #:export (home-file
             bin-file
             config-file
@@ -37,43 +37,43 @@
 
 (define (home-file . file-parts)
   "Return file name from my home directory."
-  (apply build-file-name identity (getenv "HOME") file-parts))
+  (apply build-file-name (getenv "HOME") file-parts))
 
 (define (bin-file . file-parts)
   "Return file name from my bin directory."
-  (apply build-file-name home-file "bin" file-parts))
+  (apply home-file "bin" file-parts))
 
 (define (config-file . file-parts)
   "Return file name from my config directory."
-  (apply build-file-name home-file "config" file-parts))
+  (apply home-file "config" file-parts))
 
 (define (guix-config-file . file-parts)
   "Return file name from my Guix config directory."
-  (apply build-file-name config-file "guix" file-parts))
+  (apply config-file "guix" file-parts))
 
 (define* (guix-script-file #:optional name)
   "Return file name of my Guix script NAME."
-  (apply build-file-name guix-config-file "scripts"
+  (apply guix-config-file "scripts"
          (if name
              (list name)
              '())))
 
 (define* (guix-system-file #:optional name)
   "Return file name of my Guix system NAME."
-  (apply build-file-name guix-config-file "system-config"
+  (apply guix-config-file "system-config"
          (if name
              (list (string-append "os-" name ".scm"))
              '())))
 
 (define* (guix-manifest-file #:optional name)
   "Return file name of my Guix manifest file for profile NAME."
-  (apply build-file-name guix-config-file "user-config"
+  (apply guix-config-file "user-config"
          (if name
              (list (string-append "manifest-" name ".scm"))
              '())))
 
 (define (guix-profile name)
   "Return file name of my Guix profile NAME."
-  (build-file-name home-file ".guix-profiles" name name))
+  (home-file ".guix-profiles" name name))
 
 ;;; places.scm ends here

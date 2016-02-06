@@ -37,8 +37,7 @@
   #:use-module (ice-9 ftw)
   #:use-module (ice-9 regex)
   #:use-module (srfi srfi-1)
-  #:export (build-file-name
-            symlink?
+  #:export (symlink?
             file-exists??
             mkdir-with-parents
             with-directory-excursion
@@ -47,14 +46,6 @@
             find-matching-files
             delete-file-recursively
             read-file))
-
-(define (build-file-name proc base-name . rest-parts)
-  "Concatenate BASE-NAME and REST-PARTS with slashes and call PROC on
-the result."
-  (proc (fold (lambda (part res)
-                (string-append res "/" part))
-              base-name
-              rest-parts)))
 
 (define (symlink? file)
   "Return #t if FILE is a symbolic link."

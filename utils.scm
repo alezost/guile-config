@@ -29,6 +29,7 @@
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
   #:export (mapconcat
+            build-file-name
             comma-separated))
 
 (define* (mapconcat proc lst #:optional (separator ""))
@@ -45,5 +46,9 @@ into a single string using SEPARATOR."
 (define (comma-separated . strings)
   "Return string by concatenating STRINGS with commas."
   (mapconcat identity strings ","))
+
+(define (build-file-name . file-parts)
+  "Return file name by concatenating FILE-PARTS with slashes."
+  (mapconcat identity file-parts "/"))
 
 ;;; utils.scm ends here

@@ -32,8 +32,8 @@
             guix-config-file
             guix-script-file
             guix-system-file
-            guix-profile-file
-            guix-manifest-file))
+            guix-manifest-file
+            guix-profile))
 
 (define (home-file . file-parts)
   "Return file name from my home directory."
@@ -72,11 +72,8 @@
              (list (string-append "manifest-" name ".scm"))
              '())))
 
-(define* (guix-profile-file #:optional name)
+(define (guix-profile name)
   "Return file name of my Guix profile NAME."
-  (apply build-file-name home-file ".guix-profiles"
-         (if name
-             (list name name)
-             '())))
+  (build-file-name home-file ".guix-profiles" name name))
 
 ;;; places.scm ends here

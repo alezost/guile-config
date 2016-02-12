@@ -46,8 +46,20 @@
   "Clone git REPOSITORY to DIRECTORY."
   (system* "git" "clone" repository directory))
 
+(define (git-pull directory)
+  "Run 'git pull' in DIRECTORY."
+  (system* "git"
+           (string-append "--work-tree=" directory)
+           (string-append "--git-dir=" directory "/.git")
+           "pull" "--verbose"))
+
 (define (fetch-source source)
-  "Fetch SOURCE from remote to local place."
-  (git-clone (source-uri source) (source-directory source)))
+  "Fetch SOURCE from remote to local place.
+Initialize the local directory or update it if it already exists."
+  (let ((uri (source-uri source))
+        (dir (source-directory source)))
+    (if (file-exists? dir)
+        (git-pull dir)
+        (git-clone uri dir))))
 
 ;;; sources.scm ends here

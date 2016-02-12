@@ -105,13 +105,9 @@ returned by NAME-PROC procedure."
   (let ((source (config-source config)))
     (when source
       (let ((message0 (message-proc #:indent-level 0))
-            (message1 (message-proc #:indent-level 1))
-            (name     (config-name config))
-            (dir      (source-directory source)))
+            (name     (config-name config)))
         (message0 "Fetching '~a' configuration source..." name)
-        (if (file-exists? dir)
-            (message1 "Source directory already exists: '~a'." dir)
-            (fetch-source source))))))
+        (fetch-source source)))))
 
 (define* (deploy-config config #:optional (name-proc unique-filename))
   "Deploy (create symlinks) CONFIG record.

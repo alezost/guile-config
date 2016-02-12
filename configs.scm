@@ -47,7 +47,7 @@
   config?
   (name   config-name #f)
   (source config-source #f)
-  (links  config-links #f))
+  (links  config-links '()))
 
 (define (show-source source)
   "Display information about SOURCE record."
@@ -117,7 +117,7 @@ returned by NAME-PROC procedure."
   "Deploy (create symlinks) CONFIG record.
 See 'deploy-link' for the meaning of NAME-PROC."
   (let ((links (config-links config)))
-    (when links
+    (unless (null? links)
       (let ((message0 (message-proc #:indent-level 0))
             (name     (config-name config)))
         (message0 "Deploying '~a' configuration..." name)

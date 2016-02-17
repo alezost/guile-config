@@ -27,6 +27,7 @@
 ;;
 ;; - mkdir-with-parents (from "mkdir-p");
 ;; - with-directory-excursion;
+;; - which;
 ;; - find-files;
 ;; - delete-file-recursively.
 
@@ -40,6 +41,7 @@
   #:export (symlink?
             file-exists??
             mkdir-with-parents
+            which
             with-directory-excursion
             unique-filename
             find-files
@@ -73,6 +75,13 @@ target)."
              (mkdir file))
            (loop tail file)))
         (_ #t)))))
+
+(define (which program)
+  "Return full file name of PROGRAM found in $PATH.
+Return #f if PROGRAM is not found."
+  (let ((path (string-tokenize (getenv "PATH")
+                               (char-set-complement (char-set #\:)))))
+    (search-path path program)))
 
 (define-syntax-rule (with-directory-excursion dir body ...)
   "Run BODY with DIR as the process's current directory."

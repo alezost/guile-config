@@ -1,0 +1,9 @@
+** About
+
+This repository contains my [[http://www.gnu.org/software/guile][Guile]] modules and scripts (thus it has
+nothing to do with a great Alex Sassmannshausen's [[https://github.com/a-sassmannshausen/guile-config][guile-config]] library).
+
+=guile-config= is probably not the best name for this repository, but I
+couldn't invent a better one, and since I already have such things as
+=guix-config=, =shepherd-config=, =emacs-config=, etc., I decided to use
+this name.

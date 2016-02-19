@@ -1,0 +1,152 @@
+#!/usr/bin/env guile
+!#
+;;; gui.scm --- Start GUI using Shepherd
+
+;; Copyright © 2016 Alex Kost
+
+;; Author: Alex Kost <alezost@gmail.com>
+;; Created: 9 Feb 2016
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This script is a wrapper around 'herd' command to start X server,
+;; window manager and other things on a free DISPLAY and virtual
+;; terminal.
+;;
+;; My Shepherd config: <https://gitlab.com/alezost-config/shepherd>.
+
+;;; Code:
+
+(use-modules
+ (ice-9 match)
+ (srfi srfi-1)
+ (srfi srfi-37)
+ (al files)
+ (al messages))
+
+
+;;; Command-line args
+
+(define (show-help)
+  (format #t "Usage: ~a OPTION...
+Start GUI on a free DISPLAY, using the following command:
+
+  herd start gui:<DISPLAY> ...
+
+Also update SSH (gpg-agent) startup TTY for the started X display.  See
+description in the gnupg manual:
+
+  (info \"(gnupg) Agent UPDATESTARTUPTTY\")."
+           (car (command-line)))
+  (display "\n
+Options:
+  -h, --help        display this help and exit
+  -s, --simple      start only X server and terminal
+  -n, --no-ssh-tty  do not update startup TTY for the started X display
+"))
+
+(define %default-options
+  '((simple?     . #f)
+    (update-tty? . #t)))
+
+(define %options
+  (list
+   (option '(#\h "help") #f #f
+           (lambda _
+             (show-help)
+             (exit 0)))
+   (option '(#\s "simple") #f #f
+           (lambda (opt name arg seed)
+             (alist-cons 'simple? #t
+                         (alist-delete 'simple? seed eq?))))
+   (option '(#\n "no-ssh-tty") #f #f
+           (lambda (opt name arg seed)
+             (alist-cons 'update-tty? #f
+                         (alist-delete 'update-tty? seed eq?))))))
+
+(define (parse-args args)
+  "Return alist of options from command-line ARGS."
+  (args-fold args %options
+             (lambda (opt name arg seed)
+               ((message-proc #:destination (current-error-port))
+                "Unrecognized option: '~a'." name)
+               seed)
+             (lambda (arg seed)
+               ((message-proc #:destination (current-error-port))
+                "Useless argument: '~a'." arg)
+               seed)
+             %default-options))
+
+
+
+(define (display-unused? number)
+  "Return #t if $DISPLAY ':NUMBER' is unused."
+  ;; Checking /tmp/.X<num>-lock is unreliable: for example, there is no
+  ;; lock file in /tmp (where is it?) for X server started with GDM.
+  ;; Running "DISPLAY=:0 xset q" or alike (as advised at
+  ;; <http://stackoverflow.com/questions/637005/x-server-running>) also
+  ;; doesn't work as you get "unable to open display" for both an unused
+  ;; display and a display used by GDM's X server.
+
+  ;; Is checking a socket file in "/tmp/.X11-unix/" reliable?
+  (let ((socket (string-append "/tmp/.X11-unix/X"
+                               (number->string number))))
+    (not (file-exists? socket))))
+
+(define (first-unused-display)
+  "Return the first unused $DISPLAY."
+  (let loop ((num 0))
+    (if (display-unused? num)
+        (string-append ":" (number->string num))
+        (loop (1+ num)))))
+
+(define program-available?
+  (compose ->bool which))
+
+(define (first-available-program . programs)
+  "Return the first program from PROGRAMS found in $PATH.
+Return #f if none of the PROGRAMS is available."
+  (find program-available? programs))
+
+(define* (start-gui display #:key simple?)
+  "Run 'herd' command for starting GUI on DISPLAY."
+  (apply system*
+         "herd" "start" (string-append "gui" display)
+         (if simple?
+             '()
+             (filter identity
+                     (list "xterm"
+                           (first-available-program "stumpwm" "openbox")
+                           "mosd" "unclutter" "emacs")))))
+
+(define (update-ssh-tty display)
+  (setenv "DISPLAY" display)
+  (system* "gpg-connect-agent" "updatestartuptty" "/bye"))
+
+(define (main args)
+  (match args
+    ((_ args ...)
+     (let* ((opts        (parse-args args))
+            (simple?     (assoc-ref opts 'simple?))
+            (update-tty? (assoc-ref opts 'update-tty?))
+            (display     (first-unused-display)))
+       (start-gui display #:simple? simple?)
+       (when update-tty? (update-ssh-tty display))))))
+
+(when (batch-mode?)
+  (main (command-line)))
+
+;;; gui.scm ends here

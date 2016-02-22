@@ -42,6 +42,8 @@
             file-exists??
             mkdir-with-parents
             which
+            program-exists?
+            first-existing-program
             with-directory-excursion
             unique-filename
             find-files
@@ -82,6 +84,15 @@ Return #f if PROGRAM is not found."
   (let ((path (string-tokenize (getenv "PATH")
                                (char-set-complement (char-set #\:)))))
     (search-path path program)))
+
+(define (program-exists? program)
+  "Check if program exists in $PATH."
+  (->bool which))
+
+(define (first-existing-program . programs)
+  "Return the first program from PROGRAMS found in $PATH.
+Return #f if none of the PROGRAMS is available."
+  (find program-exists? programs))
 
 (define-syntax-rule (with-directory-excursion dir body ...)
   "Run BODY with DIR as the process's current directory."

@@ -44,6 +44,7 @@
             which
             program-exists?
             first-existing-program
+            first-existing-file
             with-directory-excursion
             unique-filename
             find-files
@@ -93,6 +94,11 @@ Return #f if PROGRAM is not found."
   "Return the first program from PROGRAMS found in $PATH.
 Return #f if none of the PROGRAMS is available."
   (find program-exists? programs))
+
+(define (first-existing-file . files)
+  "Return the first existing file from FILES.
+Return #f if none of the FILES exists."
+  (find file-exists? files))
 
 (define-syntax-rule (with-directory-excursion dir body ...)
   "Run BODY with DIR as the process's current directory."

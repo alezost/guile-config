@@ -36,6 +36,7 @@
  (ice-9 regex)
  (srfi srfi-1)
  (srfi srfi-26)
+ (al files)
  (al places))
 
 (define (show-help)
@@ -69,9 +70,17 @@ Options:
   (display "Available profile names:\n")
   (format #t "~{~a~%~}" (sort names string-ci<)))
 
+(define (make-profile-directory-maybe profile)
+  "Create PROFILE's directory if it does not exist.
+PROFILE itself is a symlink, so make all its parent directories."
+  (let ((parent (parent-directory profile)))
+    (unless (file-exists? parent)
+      (mkdir-with-parents parent))))
+
 (define (populate-profile name . rest-args)
   (let ((profile  (guix-profile name))
         (manifest (guix-manifest-file name)))
+    (make-profile-directory-maybe profile)
     (if (file-exists? manifest)
         (apply system*
                "guix" "package"

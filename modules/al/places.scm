@@ -34,6 +34,7 @@
             guix-system-file
             guix-manifest-file
             guix-profile
+            guix-profile-file
             guix-user-profile-file
             guix-system-profile-file))
 
@@ -78,9 +79,13 @@
   "Return file name of my Guix profile NAME."
   (home-file ".guix-profiles" name name))
 
+(define (guix-profile-file name . file-parts)
+  "Return file name from my Guix NAME profile."
+  (apply build-file-name (guix-profile name) file-parts))
+
 (define (guix-user-profile-file . file-parts)
   "Return file name from my Guix user profile."
-  (apply build-file-name (guix-profile "main") file-parts))
+  (apply guix-profile-file "main" file-parts))
 
 (define (guix-system-profile-file . file-parts)
   "Return file name from the Guix system packages profile."

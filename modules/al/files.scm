@@ -103,7 +103,7 @@ Return #f if PROGRAM is not found."
 
 (define (program-exists? program)
   "Check if program exists in $PATH."
-  (->bool which))
+  (->bool (which program)))
 
 (define (first-existing-program . programs)
   "Return the first program from PROGRAMS found in $PATH.

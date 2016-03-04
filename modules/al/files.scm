@@ -97,9 +97,7 @@ FILE should be an absolute file name."
 (define (which program)
   "Return full file name of PROGRAM found in $PATH.
 Return #f if PROGRAM is not found."
-  (let ((path (string-tokenize (getenv "PATH")
-                               (char-set-complement (char-set #\:)))))
-    (search-path path program)))
+  (search-path (split-path) program))
 
 (define (program-exists? program)
   "Check if program exists in $PATH."

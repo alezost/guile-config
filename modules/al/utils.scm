@@ -23,14 +23,19 @@
 ;; This file provides various procedures that do not suit any other
 ;; module.
 
+;; The following procedures originate from (guix build utils) module:
+;;
+;; - split-path (from "search-path-as-string->list").
+
 ;;; Code:
 
 (define-module (al utils)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
   #:export (mapconcat
+            comma-separated
             build-file-name
-            comma-separated))
+            split-path))
 
 (define* (mapconcat proc lst #:optional (separator ""))
   "Apply PROC to each element of LST and concatenate the result strings
@@ -50,5 +55,9 @@ into a single string using SEPARATOR."
 (define (build-file-name . file-parts)
   "Return file name by concatenating FILE-PARTS with slashes."
   (mapconcat identity file-parts "/"))
+
+(define* (split-path #:optional (path (getenv "PATH")) (separator #\:))
+  "Split PATH string into a list of substrings with SEPARATOR."
+  (string-tokenize path (char-set-complement (char-set separator))))
 
 ;;; utils.scm ends here

@@ -39,6 +39,7 @@
   #:export (mapconcat
             comma-separated
             build-file-name
+            replace
             split
             split-path))
 
@@ -60,6 +61,10 @@ into a single string using SEPARATOR."
 (define (build-file-name . file-parts)
   "Return file name by concatenating FILE-PARTS with slashes."
   (mapconcat identity file-parts "/"))
+
+(define (replace pred new lst)
+  "Replace element of LST matching PRED with NEW element."
+  (cons new (remove pred lst)))
 
 (define (split lst elt)
   "Return two values, a list containing the elements of the list LST

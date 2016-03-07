@@ -23,6 +23,10 @@
 ;; This file provides various procedures that do not suit any other
 ;; module.
 
+;; The following procedures originate from (guix utils) module:
+;;
+;; - split.
+
 ;; The following procedures originate from (guix build utils) module:
 ;;
 ;; - split-path (from "search-path-as-string->list").
@@ -35,6 +39,7 @@
   #:export (mapconcat
             comma-separated
             build-file-name
+            split
             split-path))
 
 (define* (mapconcat proc lst #:optional (separator ""))
@@ -55,6 +60,23 @@ into a single string using SEPARATOR."
 (define (build-file-name . file-parts)
   "Return file name by concatenating FILE-PARTS with slashes."
   (mapconcat identity file-parts "/"))
+
+(define (split lst elt)
+  "Return two values, a list containing the elements of the list LST
+that appear before the first occurence of the object ELT and a list
+containing the elements after ELT."
+  (define (same? x)
+    (equal? elt x))
+
+  (let loop ((rest lst)
+             (acc '()))
+    (match rest
+      (()
+       (values lst '()))
+      (((? same?) . tail)
+       (values (reverse acc) tail))
+      ((head . tail)
+       (loop tail (cons head acc))))))
 
 (define* (split-path #:optional (path (getenv "PATH")) (separator #\:))
   "Split PATH string into a list of substrings with SEPARATOR."

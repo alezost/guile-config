@@ -25,6 +25,8 @@
 
 ;; The following procedures originate from (guix build utils) module:
 ;;
+;; - symlink? (from "symbolic-link?");
+;; - executable? (from "executable-file?");
 ;; - mkdir-with-parents (from "mkdir-p");
 ;; - with-directory-excursion;
 ;; - which;
@@ -38,11 +40,15 @@
   #:use-module (ice-9 ftw)
   #:use-module (ice-9 regex)
   #:use-module (srfi srfi-1)
+  #:use-module (al utils)
   #:export (symlink?
+            executable?
             file-exists??
+            canonicalize-file-name
             parent-directory
             mkdir-with-parents
             which
+            which-but
             program-exists?
             first-existing-program
             first-existing-file
@@ -57,6 +63,13 @@
   "Return #t if FILE is a symbolic link."
   (eq? (stat:type (lstat file)) 'symlink))
 
+(define (executable? file)
+  "Return #t if FILE exists and is executable (not a directory)."
+  (let ((s (stat file #f)))
+    (and s
+         (not (eq? (stat:type s) 'directory))
+         (not (zero? (logand (stat:mode s) #o100))))))
+
 (define (file-exists?? filename)
   "Check if FILENAME exists in the file system.
 This procedure is similar to 'file-exists?' except it returns #t on a
@@ -66,6 +79,14 @@ target)."
       (catch 'system-error
         (lambda () (->bool (readlink filename)))
         (const #f))))
+
+(define (canonicalize-file-name file-name)
+  "Return the canonical name of FILE-NAME.
+This procedure is similar to 'canonicalize-path' except it returns #f
+instead of raising an error."
+  (catch 'system-error
+    (lambda () (canonicalize-path file-name))
+    (const #f)))
 
 (define (parent-directory file)
   "Return FILE's parent directory.
@@ -98,6 +119,22 @@ FILE should be an absolute file name."
   "Return full file name of PROGRAM found in $PATH.
 Return #f if PROGRAM is not found."
   (search-path (split-path) program))
+
+(define (which-but program . files)
+  "Return full file name of the first PROGRAM found in $PATH which is
+not one of FILES.
+Return #f if PROGRAM is not found."
+  (let ((files (filter-map canonicalize-file-name files)))
+    (let loop ((dirs (split-path)))
+      (match dirs
+        (() #f)
+        ((dir rest-dirs ...)
+         (let* ((prog (build-file-name dir program))
+                (prog (and (executable? prog)
+                           (canonicalize-file-name prog))))
+           (if (and prog (not (member prog files)))
+               prog
+               (loop rest-dirs))))))))
 
 (define (program-exists? program)
   "Check if program exists in $PATH."

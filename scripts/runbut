@@ -1,0 +1,70 @@
+#!/usr/bin/env guile
+!#
+;;; runbut.scm --- Run program if it's not one of the undesired ones
+
+;; Copyright © 2016 Alex Kost
+
+;; Author: Alex Kost <alezost@gmail.com>
+;; Created: 4 Mar 2016
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; If you have several programs with the same name in $PATH, you can use
+;; this script to avoid running particular ones.
+
+;; For example, if there is "/bin/foo" program and you want to make a
+;; wrapper shell script "~/bin/foo" (which has a priority in your
+;; $PATH), this script may look like this:
+;;
+;;   #!/bin/bash
+;;
+;;   runbut foo "${BASH_SOURCE[0]}" -- "$@" &>> /dev/null
+;;
+;; So when you run "foo" in the command-line, "~/bin/foo" is started and
+;; with a help of "runbut" it runs another available "foo" (which is
+;; "/bin/foo").
+
+;;; Code:
+
+(use-modules
+ (ice-9 match)
+ (srfi srfi-11)
+ (al files)
+ (al messages)
+ (al utils))
+
+(define (show-help)
+  (format #t "Usage: ~a PROGRAM [FILES ...] [-- ARGS ...]
+Find PROGRAM in $PATH if it is not one of FILES and run it with ARGS.
+"
+           (car (command-line))))
+
+(define (main args)
+  (match (cdr args)
+    (((or "-h" "--help" "help") _ ...)
+     (show-help))
+    ((program rest ...)
+     (let-values (((files args) (split rest "--")))
+       (let ((prog (apply which-but program files)))
+         (if prog
+             (apply system* prog args)
+             (leave "Program not found: ~a" prog)))))
+    (_ (show-help))))
+
+(when (batch-mode?)
+  (main (command-line)))
+
+;;; runbut.scm ends here

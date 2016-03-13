@@ -29,6 +29,7 @@
   #:export (home-file
             bin-file
             config-file
+            secret-config-file
             guix-config-file
             guix-script-file
             guix-system-file
@@ -49,6 +50,10 @@
 (define (config-file . file-parts)
   "Return file name from my config directory."
   (apply home-file "config" file-parts))
+
+(define (secret-config-file . file-parts)
+  "Return file name from my secret config directory."
+  (apply config-file "secret" file-parts))
 
 (define (guix-config-file . file-parts)
   "Return file name from my Guix config directory."

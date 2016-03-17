@@ -35,7 +35,8 @@
  (srfi srfi-1)
  (srfi srfi-37)
  (al files)
- (al messages))
+ (al messages)
+ (al display))
 
 
 ;;; Command-line args
@@ -91,27 +92,7 @@ Options:
              %default-options))
 
 
-
-(define (display-unused? number)
-  "Return #t if $DISPLAY ':NUMBER' is unused."
-  ;; Checking /tmp/.X<num>-lock is unreliable: for example, there is no
-  ;; lock file in /tmp (where is it?) for X server started with GDM.
-  ;; Running "DISPLAY=:0 xset q" or alike (as advised at
-  ;; <http://stackoverflow.com/questions/637005/x-server-running>) also
-  ;; doesn't work as you get "unable to open display" for both an unused
-  ;; display and a display used by GDM's X server.
-
-  ;; Is checking a socket file in "/tmp/.X11-unix/" reliable?
-  (let ((socket (string-append "/tmp/.X11-unix/X"
-                               (number->string number))))
-    (not (file-exists? socket))))
-
-(define (first-unused-display)
-  "Return the first unused $DISPLAY."
-  (let loop ((num 0))
-    (if (display-unused? num)
-        (string-append ":" (number->string num))
-        (loop (1+ num)))))
+;;; Main
 
 (define* (start-gui display #:key simple?)
   "Run 'herd' command for starting GUI on DISPLAY."

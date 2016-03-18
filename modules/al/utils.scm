@@ -39,6 +39,7 @@
   #:export (mapconcat
             comma-separated
             build-file-name
+            min-string
             replace
             split
             split-path))
@@ -61,6 +62,14 @@ into a single string using SEPARATOR."
 (define (build-file-name . file-parts)
   "Return file name by concatenating FILE-PARTS with slashes."
   (mapconcat identity file-parts "/"))
+
+(define (min-string . strings)
+  "Like 'min' but performed on STRINGS.
+Return #f if STRINGS are not specified."
+  (reduce (lambda (cur min)
+            (if (string< cur min) cur min))
+          #f
+          strings))
 
 (define (replace pred new lst)
   "Replace element of LST matching PRED with NEW element."

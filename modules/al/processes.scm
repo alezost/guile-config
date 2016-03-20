@@ -26,7 +26,8 @@
 
 (define-module (al processes)
   #:export (environment-excursion
-            with-environment-excursion))
+            with-environment-excursion
+            process-exists?))
 
 (define (environment-excursion env-thunk body-thunk)
   "Run BODY-THUNK with the current environment set by ENV-THUNK."
@@ -41,5 +42,16 @@
   (environment-excursion
    (lambda () (environ env))
    (lambda () body ...)))
+
+(define* (process-exists? regexp #:key uid exact?)
+  "Return #t if process defined by REGEXP exists.
+If UID is specified, only check processes with this real user ID.
+If EXACT? is #t, check processes which exactly match REGEXP."
+  (let ((args `("pgrep" ,regexp
+                ,@(if exact? '("--exact") '())
+                ,@(if uid
+                      (list "--uid" (number->string uid))
+                      '()))))
+    (zero? (apply system* args))))
 
 ;;; processes.scm ends here

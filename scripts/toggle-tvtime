@@ -1,0 +1,64 @@
+#!/usr/bin/env guile
+!#
+;;; toggle-tvtime.scm --- Start or kill tvtime
+
+;; Copyright © 2016 Alex Kost
+
+;; Author: Alex Kost <alezost@gmail.com>
+;; Created: 20 Mar 2016
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This script is used to start (with some additional preparations) or
+;; kill 'tvtime' if it is already started.
+
+;;; Code:
+
+(use-modules
+ (ice-9 match)
+ (al display)
+ (al processes))
+
+(define (show-help)
+  (format #t "Usage: ~a [ARGS ...]
+Start tvtime or kill it if already running.
+ARGS are arguments passed to tvtime.
+"
+           (car (command-line))))
+
+(define (run-tvtime)
+  (system* "setaudio" "--show-osd" "--quiet" "Line" "unmute")
+  (system* "setaudio" "--quiet" "Master" "0")
+  (if (getenv "DISPLAY")
+      (system* "tvtime")
+      (with-display (first-used-display 3)
+        (system* "tvtime")))
+  (system* "setaudio" "--quiet" "Line" "mute")
+  (system* "setaudio" "--show-osd" "--quiet" "Master" "50%" "unmute"))
+
+(define (main args)
+  (match (cdr args)
+    (((or "-h" "--help" "help") _ ...)
+     (show-help))
+    ((args ...)
+     (if (process-exists? "tvtime" #:uid (getuid) #:exact? #t)
+         (system* "tvtime-command" "QUIT")
+         (run-tvtime)))))
+
+(when (batch-mode?)
+  (main (command-line)))
+
+;;; toggle-tvtime.scm ends here

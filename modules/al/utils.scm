@@ -36,13 +36,22 @@
 (define-module (al utils)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
-  #:export (mapconcat
+  #:export (with-no-output
+            mapconcat
             comma-separated
             build-file-name
             min-string
             replace
             split
             split-path))
+
+(define-syntax-rule (with-no-output body ...)
+  "Do not display any output while running BODY."
+  (let ((null (%make-void-port "w")))
+    (parameterize ((current-output-port  null)
+                   (current-error-port   null)
+                   (current-warning-port null))
+      body ...)))
 
 (define* (mapconcat proc lst #:optional (separator ""))
   "Apply PROC to each element of LST and concatenate the result strings

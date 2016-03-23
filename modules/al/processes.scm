@@ -25,8 +25,11 @@
 ;;; Code:
 
 (define-module (al processes)
+  #:use-module (ice-9 rdelim)
+  #:use-module (ice-9 popen)
   #:export (environment-excursion
             with-environment-excursion
+            system*-no-output
             process-exists?))
 
 (define (environment-excursion env-thunk body-thunk)
@@ -53,5 +56,11 @@ If EXACT? is #t, check processes which exactly match REGEXP."
                       (list "--uid" (number->string uid))
                       '()))))
     (zero? (apply system* args))))
+
+(define (system*-no-output . args)
+  "Like 'system*' but suppress the output of the command indicated by ARGS."
+  (let ((port (apply open-pipe* OPEN_READ args)))
+    (read-string port)
+    (close-pipe port)))
 
 ;;; processes.scm ends here

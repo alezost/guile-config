@@ -57,7 +57,7 @@
        (with-display display
          ;; 'xset' errors if DISPLAY is not available.  Is there a
          ;; better way to find available DISPLAY?
-         (zero? (system* "xset" "q")))))
+         (zero? (system*-no-output "xset" "q")))))
 
 (define (display-unused? display)
   "Return #t if $DISPLAY is unused."

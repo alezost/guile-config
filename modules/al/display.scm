@@ -54,10 +54,7 @@
 (define (display-used? display)
   "Return #t if $DISPLAY is used and available for the current user."
   (and (not (display-unused? display))
-       (with-display display
-         ;; 'xset' errors if DISPLAY is not available.  Is there a
-         ;; better way to find available DISPLAY?
-         (zero? (system*-no-output "xset" "q")))))
+       (zero? (status:exit-val (system* "xdpyprobe" "--quiet" display)))))
 
 (define (display-unused? display)
   "Return #t if $DISPLAY is unused."

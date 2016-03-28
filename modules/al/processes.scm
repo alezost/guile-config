@@ -55,7 +55,7 @@ If EXACT? is #t, check processes which exactly match REGEXP."
                 ,@(if uid
                       (list "--uid" (number->string uid))
                       '()))))
-    (zero? (apply system* args))))
+    (zero? (status:exit-val (apply system* args)))))
 
 (define (system*-no-output . args)
   "Like 'system*' but suppress the output of the command indicated by ARGS."

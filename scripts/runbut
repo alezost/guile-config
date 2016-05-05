@@ -61,7 +61,7 @@ Find PROGRAM in $PATH if it is not one of FILES and run it with ARGS.
        (let ((prog (apply which-but program files)))
          (if prog
              (apply system* prog args)
-             (leave "Program not found: ~a" prog)))))
+             (leave "Program not found: ~a" program)))))
     (_ (show-help))))
 
 (when (batch-mode?)

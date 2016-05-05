@@ -23,10 +23,6 @@
 ;; This file provides various procedures that do not suit any other
 ;; module.
 
-;; The following procedures originate from (guix utils) module:
-;;
-;; - split.
-
 ;; The following procedures originate from (guix build utils) module:
 ;;
 ;; - split-path (from "search-path-as-string->list").
@@ -36,6 +32,8 @@
 (define-module (al utils)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-11)
+  #:use-module (srfi srfi-26)
   #:export (with-no-output
             mapconcat
             comma-separated
@@ -88,18 +86,12 @@ Return #f if STRINGS are not specified."
   "Return two values, a list containing the elements of the list LST
 that appear before the first occurence of the object ELT and a list
 containing the elements after ELT."
-  (define (same? x)
-    (equal? elt x))
-
-  (let loop ((rest lst)
-             (acc '()))
-    (match rest
-      (()
-       (values lst '()))
-      (((? same?) . tail)
-       (values (reverse acc) tail))
-      ((head . tail)
-       (loop tail (cons head acc))))))
+  (let-values (((head tail)
+                (break (cut string=? elt <>) lst)))
+    (values head
+            (match tail
+              (() '())
+              ((_ rest ...) rest)))))
 
 (define* (split-path #:optional (path (getenv "PATH")) (separator #\:))
   "Split PATH string into a list of substrings with SEPARATOR."

@@ -35,6 +35,7 @@
   #:use-module (srfi srfi-11)
   #:use-module (srfi srfi-26)
   #:export (with-no-output
+            define-delayed
             mapconcat
             comma-separated
             build-file-name
@@ -42,6 +43,14 @@
             replace
             split
             split-path))
+
+(define-syntax-rule (define-delayed name expression)
+  "Define NAME thunk that will evaluate EXPRESSION, remember and return
+its value on a first call and will return this value on subsequent
+calls."
+  (define name
+    (let ((value (delay expression)))
+      (lambda () (force value)))))
 
 (define-syntax-rule (with-no-output body ...)
   "Do not display any output while running BODY."

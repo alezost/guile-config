@@ -103,7 +103,7 @@ Options:
              (filter identity
                      (list "xterm"
                            (first-existing-program "stumpwm" "openbox")
-                           "mosd" "unclutter" "emacs")))))
+                           "unclutter" "emacs")))))
 
 (define (update-ssh-tty display)
   (setenv "DISPLAY" display)

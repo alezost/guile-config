@@ -36,6 +36,7 @@
   #:use-module (srfi srfi-26)
   #:export (with-no-output
             define-delayed
+            push!
             mapconcat
             comma-separated
             build-file-name
@@ -51,6 +52,10 @@ calls."
   (define name
     (let ((value (delay expression)))
       (lambda () (force value)))))
+
+(define-syntax-rule (push! elt lst)
+  "Add ELT to LST."
+  (set! lst (cons elt lst)))
 
 (define-syntax-rule (with-no-output body ...)
   "Do not display any output while running BODY."

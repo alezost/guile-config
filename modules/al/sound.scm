@@ -37,6 +37,8 @@
             sound-control
             sound-volume
             sound-muted?
+            get-sound
+            set-sound
             call-amixer
             parse-amixer-output))
 
@@ -68,5 +70,14 @@ Return #f if OUTPUT cannot be parsed."
          #:control (match:substring control-match 1)
          #:volume (string->number (match:substring playback-match 1))
          #:muted? (string=? "off" (match:substring playback-match 2)))))))
+
+(define (get-sound . args)
+  "Call 'amixer sget ARGS ...', parse its outputs and return <sound>
+structure."
+  (parse-amixer-output (apply call-amixer "sget" args)))
+
+(define (set-sound . args)
+  "Call 'amixer sset ARGS ...'."
+  (apply system* "amixer" "sset" args))
 
 ;;; sound.scm ends here

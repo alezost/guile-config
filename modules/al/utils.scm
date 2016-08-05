@@ -23,9 +23,10 @@
 ;; This file provides various procedures that do not suit any other
 ;; module.
 
-;; The following procedures originate from (guix build utils) module:
+;; The following procedures originate from Guix source code:
 ;;
-;; - split-path (from "search-path-as-string->list").
+;; - split-path: "search-path-as-string->list" from (guix build utils)
+;; - memoize: from (guix combinators)
 
 ;;; Code:
 
@@ -36,6 +37,7 @@
   #:use-module (srfi srfi-26)
   #:export (with-no-output
             define-delayed
+            memoize
             push!
             mapconcat
             comma-separated
@@ -52,6 +54,19 @@ calls."
   (define name
     (let ((value (delay expression)))
       (lambda () (force value)))))
+
+(define (memoize proc)
+  "Return a memoizing version of PROC."
+  (let ((cache (make-hash-table)))
+    (lambda args
+      (let ((results (hash-ref cache args)))
+        (if results
+            (apply values results)
+            (let ((results (call-with-values
+                               (lambda () (apply proc args))
+                             list)))
+              (hash-set! cache args results)
+              (apply values results)))))))
 
 (define-syntax-rule (push! elt lst)
   "Add ELT to LST."

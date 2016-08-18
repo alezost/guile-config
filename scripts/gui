@@ -11,12 +11,12 @@
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -46,22 +46,30 @@
 Start GUI on a free DISPLAY, using the following command:
 
   herd start gui:<DISPLAY> ...
-
-Also update SSH (gpg-agent) startup TTY for the started X display.  See
-description in the gnupg manual:
-
-  (info \"(gnupg) Agent UPDATESTARTUPTTY\")."
+"
            (car (command-line)))
-  (display "\n
+  (display "
 Options:
   -h, --help        display this help and exit
   -s, --simple      start only X server and terminal
+  -t, --ssh-tty     update startup TTY for the started X display
   -n, --no-ssh-tty  do not update startup TTY for the started X display
+")
+  (display "
+By default (without additional options), SSH (gpg-agent) startup TTY
+will be updated for the started X display.  See description in the GnuPG
+manual:
+
+  (info \"(gnupg) Agent UPDATESTARTUPTTY\").
+
+If '--simple' option is specified, default action is not updating SSH
+TTY.  '--[no-]ssh-tty' option sets updating / not updating
+uncoditionally.
 "))
 
 (define %default-options
   '((simple?     . #f)
-    (update-tty? . #t)))
+    (update-tty? . undefined)))
 
 (define %options
   (list
@@ -73,6 +81,10 @@ Options:
            (lambda (opt name arg seed)
              (alist-cons 'simple? #t
                          (alist-delete 'simple? seed eq?))))
+   (option '(#\t "ssh-tty") #f #f
+           (lambda (opt name arg seed)
+             (alist-cons 'update-tty? #t
+                         (alist-delete 'update-tty? seed eq?))))
    (option '(#\n "no-ssh-tty") #f #f
            (lambda (opt name arg seed)
              (alist-cons 'update-tty? #f
@@ -115,6 +127,9 @@ Options:
      (let* ((opts        (parse-args args))
             (simple?     (assoc-ref opts 'simple?))
             (update-tty? (assoc-ref opts 'update-tty?))
+            (update-tty? (if (boolean? update-tty?)
+                             update-tty?
+                             (not simple?)))
             (display     (first-unused-display)))
        (start-gui display #:simple? simple?)
        (when update-tty? (update-ssh-tty display))))))

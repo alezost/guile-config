@@ -51,28 +51,24 @@
 
 (define (show-source source)
   "Display information about SOURCE record."
-  (define message* (message-proc #:indent-level 1))
-  (message* "Source URI: ~a" (source-uri source))
-  (message* "Directory:  ~a" (source-directory source)))
+  (message1 "Source URI: ~a" (source-uri source))
+  (message1 "Directory:  ~a" (source-directory source)))
 
 (define (show-link link)
   "Display information about LINK record."
-  (define message* (message-proc #:indent-level 1))
-  (message* (link-string link)))
+  (message1 (link-string link)))
 
 (define* (deploy-link link #:optional (name-proc unique-filename))
   "Deploy LINK record if needed.
 If LINK's target file already exists, it will be renamed into a name
 returned by NAME-PROC procedure."
-  (define message* (message-proc #:indent-level 1))
-
   (define (rename-file-unique filename)
     (let ((new-name (name-proc filename)))
       (rename-file filename new-name)
-      (message* "Old file has been renamed to '~a'." new-name)))
+      (message1 "Old file has been renamed to '~a'." new-name)))
 
   (if (link-exists? link)
-      (message* "A proper link already exists: '~a'."
+      (message1 "A proper link already exists: '~a'."
                 (link-string link))
       (let* ((filename (link-filename link))
              (target   (link-target link))
@@ -85,18 +81,17 @@ returned by NAME-PROC procedure."
               (when (file-exists?? filename)
                 (rename-file-unique filename))
               (create-link link)
-              (message* "Link has been created: '~a'."
+              (message1 "Link has been created: '~a'."
                         (link-string link)))
-            (message* "Target does not exists: '~a'."
+            (message1 "Target does not exists: '~a'."
                       target)))))
 
 (define (show-config config)
   "Show info about CONFIG record."
-  (define message* (message-proc #:indent-level 0))
   (let ((name   (config-name config))
         (source (config-source config))
         (links  (config-links config)))
-    (message* "'~a' configuration:" name)
+    (message0 "'~a' configuration:" name)
     (when source (show-source source))
     (map show-link links)))
 
@@ -104,8 +99,7 @@ returned by NAME-PROC procedure."
   "Fetch source of CONFIG record."
   (let ((source (config-source config)))
     (when source
-      (let ((message0 (message-proc #:indent-level 0))
-            (name     (config-name config)))
+      (let ((name (config-name config)))
         (message0 "Fetching '~a' configuration source..." name)
         (fetch-source source)))))
 
@@ -114,8 +108,7 @@ returned by NAME-PROC procedure."
 See 'deploy-link' for the meaning of NAME-PROC."
   (let ((links (config-links config)))
     (unless (null? links)
-      (let ((message0 (message-proc #:indent-level 0))
-            (name     (config-name config)))
+      (let ((name (config-name config)))
         (message0 "Deploying '~a' configuration..." name)
         (map (cut deploy-link <> name-proc) links)))))
 

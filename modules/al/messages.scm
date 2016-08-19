@@ -29,6 +29,8 @@
   #:use-module (srfi srfi-26)
   #:export (message
             message-proc
+            message0
+            message1
             leave))
 
 (define* (indent-string level #:optional (step 3))
@@ -44,6 +46,9 @@
 (define* (message-proc #:key (indent-level 0) (destination #t))
   "Return procedure for displaying a message."
   (cut message indent-level destination <> <...>))
+
+(define message0 (message-proc #:indent-level 0))
+(define message1 (message-proc #:indent-level 1))
 
 (define (leave format-string . args)
   "Print message to STDERR and exit."

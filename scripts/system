@@ -67,8 +67,7 @@ Return #f if ACTION is unknown."
     `("guix" "system" "build" "--no-grub" ,@rest-args ,%config))
    ((action? "reconfigure")
     `("sudo" "--preserve-env"
-      "guix" "system" "reconfigure"
-      "--no-grub" "--no-substitutes" ,@rest-args ,%config))
+      "guix" "system" "reconfigure" "--no-grub" ,@rest-args ,%config))
    (else #f)))
 
 (define (main args)

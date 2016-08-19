@@ -31,7 +31,6 @@
 ;;; Code:
 
 (use-modules
- (ice-9 match)
  (srfi srfi-1)
  (srfi srfi-37)
  (al files)
@@ -121,20 +120,18 @@ uncoditionally.
   (setenv "DISPLAY" display)
   (system* "gpg-connect-agent" "updatestartuptty" "/bye"))
 
-(define (main args)
-  (match args
-    ((_ args ...)
-     (let* ((opts        (parse-args args))
-            (simple?     (assoc-ref opts 'simple?))
-            (update-tty? (assoc-ref opts 'update-tty?))
-            (update-tty? (if (boolean? update-tty?)
-                             update-tty?
-                             (not simple?)))
-            (display     (first-unused-display)))
-       (start-gui display #:simple? simple?)
-       (when update-tty? (update-ssh-tty display))))))
+(define (main arg0 . args)
+  (let* ((opts        (parse-args args))
+         (simple?     (assoc-ref opts 'simple?))
+         (update-tty? (assoc-ref opts 'update-tty?))
+         (update-tty? (if (boolean? update-tty?)
+                          update-tty?
+                          (not simple?)))
+         (display     (first-unused-display)))
+    (start-gui display #:simple? simple?)
+    (when update-tty? (update-ssh-tty display))))
 
 (when (batch-mode?)
-  (main (command-line)))
+  (apply main (command-line)))
 
 ;;; gui.scm ends here

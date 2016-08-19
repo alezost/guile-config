@@ -31,6 +31,8 @@
             message-proc
             message0
             message1
+            print-output
+            print-error
             leave))
 
 (define* (indent-string level #:optional (step 3))
@@ -50,9 +52,12 @@
 (define message0 (message-proc #:indent-level 0))
 (define message1 (message-proc #:indent-level 1))
 
+(define print-output message0)
+(define print-error (message-proc #:destination (current-error-port)))
+
 (define (leave format-string . args)
   "Print message to STDERR and exit."
-  (apply message 0 (current-error-port) format-string args)
+  (print-error format-string args)
   (exit 1))
 
 ;;; messages.scm ends here

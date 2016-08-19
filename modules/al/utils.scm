@@ -39,6 +39,7 @@
             define-delayed
             memoize
             push!
+            set-locale
             mapconcat
             comma-separated
             build-file-name
@@ -79,6 +80,13 @@ calls."
                    (current-error-port   null)
                    (current-warning-port null))
       body ...)))
+
+(define* (set-locale #:optional (locale ""))
+  "Call (setlocale LC_ALL LOCALE) and ignore errors."
+  (catch #t
+    (lambda _ (setlocale LC_ALL locale))
+    (lambda (_ . args)
+      (apply display-error #f (current-error-port) args))))
 
 (define* (mapconcat proc lst #:optional (separator ""))
   "Apply PROC to each element of LST and concatenate the result strings

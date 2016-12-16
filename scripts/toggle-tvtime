@@ -30,8 +30,7 @@
 (use-modules
  (ice-9 match)
  (al display)
- (al processes)
- (al sound))
+ (al processes))
 
 (define (show-help)
   (format #t "Usage: ~a [ARGS ...]
@@ -41,17 +40,10 @@ ARGS are arguments passed to tvtime.
            (car (command-line))))
 
 (define (run-tvtime)
-  (let* ((old-sound  (get-sound "Master"))
-         (old-volume (sound-volume old-sound)))
-    (set-sound "Master" "0")
-    (set-sound "Line" "unmute")
-    (if (getenv "DISPLAY")
-        (system* "tvtime")
-        (with-display (first-used-display 3)
-          (system* "tvtime")))
-    (set-sound "Line" "mute")
-    (set-sound "Master" "unmute"
-               (string-append (number->string old-volume) "%"))))
+  (if (getenv "DISPLAY")
+      (system* "tvtime")
+      (with-display (first-used-display 3)
+        (system* "tvtime"))))
 
 (define (main args)
   (match (cdr args)

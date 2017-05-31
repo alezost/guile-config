@@ -1,6 +1,6 @@
 ;;; lirc.scm --- LIRC client utilities
 
-;; Copyright © 2016 Alex Kost
+;; Copyright © 2016, 2017 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created: 1 Aug 2016
@@ -38,6 +38,7 @@
 (define-module (al lirc)
   #:use-module (ice-9 rdelim)
   #:use-module (ice-9 regex)
+  #:use-module (ice-9 threads)
   #:use-module (srfi srfi-26)
   #:use-module (al records)
   #:export (make-lirc-connection

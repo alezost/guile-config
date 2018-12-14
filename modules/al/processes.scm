@@ -1,6 +1,6 @@
 ;;; processes.scm --- Utilities for working with processes
 
-;; Copyright © 2016 Alex Kost
+;; Copyright © 2016, 2018 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created: 19 Mar 2016
@@ -9,12 +9,12 @@
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -29,6 +29,7 @@
   #:use-module (ice-9 popen)
   #:export (environment-excursion
             with-environment-excursion
+            system*-output
             system*-no-output
             process-exists?))
 
@@ -56,6 +57,13 @@ If EXACT? is #t, check processes which exactly match REGEXP."
                       (list "--uid" (number->string uid))
                       '()))))
     (zero? (status:exit-val (apply system* args)))))
+
+(define (system*-output . args)
+  "Like 'system*' but return the output of the command indicated by ARGS."
+  (let* ((port (apply open-pipe* OPEN_READ args))
+         (out  (read-string port)))
+    (close-pipe port)
+    out))
 
 (define (system*-no-output . args)
   "Like 'system*' but suppress the output of the command indicated by ARGS."

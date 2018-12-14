@@ -1,6 +1,6 @@
 ;;; sound.scm --- Sound utilities
 
-;; Copyright © 2016 Alex Kost
+;; Copyright © 2016, 2018 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created: 14 Jul 2016
@@ -26,10 +26,9 @@
 ;;; Code:
 
 (define-module (al sound)
-  #:use-module (ice-9 popen)
-  #:use-module (ice-9 rdelim)
   #:use-module (ice-9 regex)
   #:use-module (srfi srfi-2)
+  #:use-module (al processes)
   #:use-module (al records)
   #:export (make-sound
             sound*
@@ -51,10 +50,7 @@
 
 (define (call-amixer . args)
   "Call 'amixer' with ARGS and return its output."
-  (let* ((port (apply open-pipe* OPEN_READ "amixer" args))
-         (out  (read-string port)))
-    (close-pipe port)
-    out))
+  (apply system*-output "amixer" args))
 
 (define parse-amixer-output
   (let ((control-rx  (make-regexp "Simple mixer control '([^']+)"))

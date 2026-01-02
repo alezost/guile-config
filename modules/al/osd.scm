@@ -1,6 +1,6 @@
 ;;; osd.scm --- Auxiliary code for working with OSDs
 
-;; Copyright © 2016 Alex Kost <alezost@gmail.com>
+;; Copyright © 2016–2026 Alex Kost <alezost@gmail.com>
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -28,12 +28,17 @@
   "Register OSD for such procedures as 'hide-osds'."
   (push! osd %osds))
 
-(define-syntax-rule (define-osd name expression)
-  "Define NAME thunk that will return OSD object that EXPRESSION evaluates to.
-This object will be returned on subsequent calls of NAME.  This object
-is also registered with 'register-osd'."
+(define-syntax-rule (define-osd name args ...)
+  "Define NAME thunk that will return OSD object made with ARGS.
+
+ARGS are passed to 'make-osd' procedure.
+
+OSD object is not defined immediately, it will be created on the first
+'name' call and will be returned on subsequent calls of NAME.
+
+Created OSD object is also registered with 'register-osd'."
   (define-delayed name
-    (let ((osd expression))
+    (let ((osd (make-osd args ...)))
       (register-osd osd)
       osd)))
 

@@ -40,6 +40,7 @@
   #:export (with-no-output
             if-let
             when-let
+            remove-keywords
             define-delayed
             memoize
             push!
@@ -91,6 +92,21 @@ calls."
                          list)))
           (hash-set! cache args results)
           (apply values results))))))
+
+(define (remove-keywords args)
+  "Remove all keyword/value pairs from ARGS.
+This function exists because when a procedure is defined using both
+#:key and #:rest keywords, then the rest argument also contains all the
+key/value pairs.  See `(guile) lambda* and define*' node in the Guile
+info manual."
+  (let loop ((args args)
+             (result '()))
+    (match args
+      (() (reverse result))
+      (((? keyword?) value . rest)
+       (loop rest result))
+      ((arg . rest)
+       (loop rest (cons arg result))))))
 
 (define-syntax-rule (push! elt lst)
   "Add ELT to LST."

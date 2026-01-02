@@ -2,7 +2,7 @@
 !#
 ;;; gui.scm --- Start GUI using Shepherd
 
-;; Copyright © 2016 Alex Kost
+;; Copyright © 2016–2026 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created: 9 Feb 2016
@@ -51,19 +51,6 @@ Start GUI on a free DISPLAY, using the following command:
 Options:
   -h, --help        display this help and exit
   -s, --simple      start only X server and terminal
-  -t, --ssh-tty     update startup TTY for the started X display
-  -n, --no-ssh-tty  do not update startup TTY for the started X display
-")
-  (display "
-By default (without additional options), SSH (gpg-agent) startup TTY
-will be updated for the started X display.  See description in the GnuPG
-manual:
-
-  (info \"(gnupg) Agent UPDATESTARTUPTTY\").
-
-If '--simple' option is specified, default action is not updating SSH
-TTY.  '--[no-]ssh-tty' option sets updating / not updating
-uncoditionally.
 "))
 
 (define %default-options
@@ -79,15 +66,7 @@ uncoditionally.
    (option '(#\s "simple") #f #f
            (lambda (opt name arg seed)
              (alist-cons 'simple? #t
-                         (alist-delete 'simple? seed eq?))))
-   (option '(#\t "ssh-tty") #f #f
-           (lambda (opt name arg seed)
-             (alist-cons 'update-tty? #t
-                         (alist-delete 'update-tty? seed eq?))))
-   (option '(#\n "no-ssh-tty") #f #f
-           (lambda (opt name arg seed)
-             (alist-cons 'update-tty? #f
-                         (alist-delete 'update-tty? seed eq?))))))
+                         (alist-delete 'simple? seed eq?))))))
 
 (define (parse-args args)
   "Return alist of options from command-line ARGS."
@@ -114,20 +93,11 @@ uncoditionally.
                            (first-existing-program "stumpwm" "openbox")
                            "unclutter" "emacs")))))
 
-(define (update-ssh-tty display)
-  (setenv "DISPLAY" display)
-  (system* "gpg-connect-agent" "updatestartuptty" "/bye"))
-
 (define (main arg0 . args)
   (let* ((opts        (parse-args args))
          (simple?     (assoc-ref opts 'simple?))
-         (update-tty? (assoc-ref opts 'update-tty?))
-         (update-tty? (if (boolean? update-tty?)
-                          update-tty?
-                          (not simple?)))
          (display     (first-unused-display)))
-    (start-gui display #:simple? simple?)
-    (when update-tty? (update-ssh-tty display))))
+    (start-gui display #:simple? simple?)))
 
 (when (batch-mode?)
   (apply main (command-line)))

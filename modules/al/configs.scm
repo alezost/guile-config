@@ -1,20 +1,20 @@
 ;;; configs.scm --- Procedures for working with configs
 
-;; Copyright © 2015, 2016 Alex Kost
+;; Copyright © 2015–2026 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
-;; Created:  6 Mar 2015
+;; Created: 6 Mar 2015
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -32,6 +32,7 @@
   #:use-module (al messages)
   #:use-module (al records)
   #:use-module (al sources)
+  #:use-module (al utils)
   #:export (make-config
             config*
             config?
@@ -97,11 +98,10 @@ returned by NAME-PROC procedure."
 
 (define (fetch-config config)
   "Fetch source of CONFIG record."
-  (let ((source (config-source config)))
-    (when source
-      (let ((name (config-name config)))
-        (message0 "Fetching '~a' configuration source..." name)
-        (fetch-source source)))))
+  (when-let ((source (config-source config)))
+    (message0 "Fetching '~a' configuration source..."
+              (config-name config))
+    (fetch-source source)))
 
 (define* (deploy-config config #:optional (name-proc unique-filename))
   "Deploy (create symlinks) CONFIG record.

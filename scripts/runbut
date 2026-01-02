@@ -2,7 +2,7 @@
 !#
 ;;; runbut.scm --- Run program if it's not one of the undesired ones
 
-;; Copyright © 2016 Alex Kost
+;; Copyright © 2016–2026 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created: 4 Mar 2016
@@ -11,12 +11,12 @@
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -58,10 +58,9 @@ Find PROGRAM in $PATH if it is not one of FILES and run it with ARGS.
      (show-help))
     ((program rest ...)
      (let-values (((files args) (split rest "--")))
-       (let ((prog (apply which-but program files)))
-         (if prog
-             (apply system* prog args)
-             (leave "Program not found: ~a" program)))))
+       (if-let ((prog (apply which-but program files)))
+         (apply system* prog args)
+         (leave "Program not found: ~a" program))))
     (_ (show-help))))
 
 (when (batch-mode?)

@@ -2,7 +2,7 @@
 !#
 ;;; system.scm --- Check, build or reconfigure Guix system
 
-;; Copyright © 2015–2017 Alex Kost
+;; Copyright © 2015–2026 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created: 13 Jun 2015
@@ -32,6 +32,7 @@
 (use-modules
  (ice-9 match)
  (ice-9 regex)
+ (al utils)
  (al places))
 
 (define %config (guix-system-file "main"))
@@ -73,10 +74,9 @@ Return #f if ACTION is unknown."
 (define (main args)
   (match (cdr args)
     ((action rest-args ...)
-     (let ((cmd (apply action->command action rest-args)))
-       (if cmd
-           (apply system* cmd)
-           (show-help))))
+     (if-let ((cmd (apply action->command action rest-args)))
+       (apply system* cmd)
+       (show-help)))
     (_ (show-help))))
 
 (when (batch-mode?)

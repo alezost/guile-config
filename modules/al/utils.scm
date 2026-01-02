@@ -1,20 +1,20 @@
 ;;; utils.scm --- Miscellaneous utilities
 
-;; Copyright © 2016 Alex Kost
+;; Copyright © 2016–2026 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
-;; Created:  6 Feb 2016
+;; Created: 6 Feb 2016
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -35,7 +35,11 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-11)
   #:use-module (srfi srfi-26)
+  #:use-module (ice-9 and-let-star) ; or (srfi srfi-2)
+  #:re-export ((and-let* . and-let))
   #:export (with-no-output
+            if-let
+            when-let
             define-delayed
             memoize
             push!
@@ -47,6 +51,26 @@
             replace
             split
             split-path))
+
+(define-syntax if-let
+  (syntax-rules ()
+    ;; Single binding.
+    ((_ ((var expr)) then else)
+     (let ((var expr))
+       (if var then else)))
+    ;; Multiple bindings.
+    ((_ ((var expr) rest ...) then else)
+     (let ((var expr))
+       (if var
+         (if-let (rest ...) then else)
+         else)))
+    ;; No else clause.
+    ((_ bindings then)
+     (if-let bindings then #f))))
+
+(define-syntax-rule (when-let bindings body ...)
+  (if-let bindings
+    (begin body ...)))
 
 (define-syntax-rule (define-delayed name expression)
   "Define NAME thunk that will evaluate EXPRESSION, remember and return
@@ -60,14 +84,13 @@ calls."
   "Return a memoizing version of PROC."
   (let ((cache (make-hash-table)))
     (lambda args
-      (let ((results (hash-ref cache args)))
-        (if results
-            (apply values results)
-            (let ((results (call-with-values
-                               (lambda () (apply proc args))
-                             list)))
-              (hash-set! cache args results)
-              (apply values results)))))))
+      (if-let ((results (hash-ref cache args)))
+        (apply values results)
+        (let ((results (call-with-values
+                           (lambda () (apply proc args))
+                         list)))
+          (hash-set! cache args results)
+          (apply values results))))))
 
 (define-syntax-rule (push! elt lst)
   "Add ELT to LST."

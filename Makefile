@@ -1,6 +1,6 @@
 # Makefile --- GNU Makefile to build Guile code
 
-# Copyright © 2017 Alex Kost <alezost@gmail.com>
+# Copyright © 2017–2026 Alex Kost <alezost@gmail.com>
 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,30 +20,11 @@
 # The only purpose of this Makefile is to build .scm files to check them
 # for potential errors.
 
-MODULES_DIR = modules
-SCRIPTS_DIR = scripts
+MODULES_DIR = $(CURDIR)/modules
+SCRIPTS_DIR = $(CURDIR)/scripts
 
-MODULES =					\
-  $(MODULES_DIR)/al/utils.scm			\
-  $(MODULES_DIR)/al/records.scm			\
-  $(MODULES_DIR)/al/plists.scm			\
-  $(MODULES_DIR)/al/processes.scm		\
-  $(MODULES_DIR)/al/files.scm			\
-  $(MODULES_DIR)/al/messages.scm		\
-  $(MODULES_DIR)/al/places.scm			\
-  $(MODULES_DIR)/al/display.scm			\
-  $(MODULES_DIR)/al/sound.scm			\
-  $(MODULES_DIR)/al/lirc.scm			\
-  $(MODULES_DIR)/al/links.scm			\
-  $(MODULES_DIR)/al/sources.scm			\
-  $(MODULES_DIR)/al/configs.scm
-
-SCRIPTS =					\
-  $(SCRIPTS_DIR)/gui				\
-  $(SCRIPTS_DIR)/profile			\
-  $(SCRIPTS_DIR)/runbut				\
-  $(SCRIPTS_DIR)/system				\
-  $(SCRIPTS_DIR)/toggle-tvtime
+MODULES = $(shell find -L $(MODULES_DIR) -mindepth 1 -name '*scm')
+SCRIPTS = $(shell find -L $(SCRIPTS_DIR) -mindepth 1)
 
 # SCM_FILES = $(MODULES) $(SCRIPTS)
 GO_FILES = $(MODULES:%.scm=%.go)

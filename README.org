@@ -5,5 +5,6 @@ nothing to do with a great Alex Sassmannshausen's [[https://github.com/a-sassman
 
 =guile-config= is probably not the best name for this repository, but I
 couldn't invent a better one, and since I already have such things as
-=guix-config=, =shepherd-config=, =emacs-config=, etc., I decided to use
+[[https://github.com/alezost/emacs-config][emacs-config]], [[https://github.com/alezost/stumpwm-config][stumpwm-config]], [[https://github.com/alezost/shepherd-config][shepherd-config]], etc., I decided to use
 this name.
+

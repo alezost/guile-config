@@ -18,7 +18,8 @@
 (define-module (al osd)
   #:use-module (xosd)
   #:use-module (al utils)
-  #:export (hide-osds
+  #:export (show-osds
+            hide-osds
             register-osd
             define-osd))
 
@@ -41,6 +42,10 @@ Created OSD object is also registered with 'register-osd'."
     (let ((osd (make-osd args ...)))
       (register-osd osd)
       osd)))
+
+(define (show-osds)
+  "Show all registered OSDs."
+  (for-each show-osd %osds))
 
 (define (hide-osds)
   "Hide all registered OSDs."

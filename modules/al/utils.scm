@@ -93,8 +93,13 @@ calls."
           (hash-set! cache args results)
           (apply values results))))))
 
-(define (remove-keywords args)
-  "Remove all keyword/value pairs from ARGS.
+(define (remove-keywords args . keywords)
+  ;; Originates from `strip-keyword-arguments' from (guix utils).
+  "Remove keyword/value pairs from ARGS.
+
+If KEYWORDS are specified, remove only these keywords.  Otherwise,
+remove all KEYWORDS.
+
 This function exists because when a procedure is defined using both
 #:key and #:rest keywords, then the rest argument also contains all the
 key/value pairs.  See `(guile) lambda* and define*' node in the Guile
@@ -103,8 +108,12 @@ info manual."
              (result '()))
     (match args
       (() (reverse result))
-      (((? keyword?) value . rest)
-       (loop rest result))
+      (((? keyword? keyword) value . rest)
+       (loop rest
+             (if (or (null? keywords)
+                     (memq keyword keywords))
+               result
+               (cons* value keyword result))))
       ((arg . rest)
        (loop rest (cons arg result))))))
 

@@ -25,8 +25,9 @@
 
 ;; The following procedures originate from Guix source code:
 ;;
-;; - split-path: "search-path-as-string->list" from (guix build utils)
+;; - split-path: `search-path-as-string->list' from (guix build utils)
 ;; - memoize: from (guix combinators)
+;; - remove-keywords: `strip-keyword-arguments' from (guix utils).
 
 ;;; Code:
 
@@ -35,11 +36,8 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-11)
   #:use-module (srfi srfi-26)
-  #:use-module (ice-9 and-let-star) ; or (srfi srfi-2)
-  #:re-export ((and-let* . and-let))
+  #:use-module (al let-macros)
   #:export (with-no-output
-            if-let
-            when-let
             remove-keywords
             define-delayed
             memoize
@@ -52,26 +50,6 @@
             replace
             split
             split-path))
-
-(define-syntax if-let
-  (syntax-rules ()
-    ;; Single binding.
-    ((_ ((var expr)) then else)
-     (let ((var expr))
-       (if var then else)))
-    ;; Multiple bindings.
-    ((_ ((var expr) rest ...) then else)
-     (let ((var expr))
-       (if var
-         (if-let (rest ...) then else)
-         else)))
-    ;; No else clause.
-    ((_ bindings then)
-     (if-let bindings then #f))))
-
-(define-syntax-rule (when-let bindings body ...)
-  (if-let bindings
-    (begin body ...)))
 
 (define-syntax-rule (define-delayed name expression)
   "Define NAME thunk that will evaluate EXPRESSION, remember and return
@@ -94,7 +72,6 @@ calls."
           (apply values results))))))
 
 (define (remove-keywords args . keywords)
-  ;; Originates from `strip-keyword-arguments' from (guix utils).
   "Remove keyword/value pairs from ARGS.
 
 If KEYWORDS are specified, remove only these keywords.  Otherwise,

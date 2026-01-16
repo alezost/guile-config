@@ -32,7 +32,7 @@
 (use-modules
  (ice-9 match)
  (ice-9 regex)
- (al utils)
+ (al let-macros)
  (al places))
 
 (define %config (guix-system-file "main"))

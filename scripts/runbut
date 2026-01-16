@@ -42,9 +42,9 @@
 (use-modules
  (ice-9 match)
  (srfi srfi-11)
+ (al let-macros)
  (al files)
- (al messages)
- (al utils))
+ (al messages))
 
 (define (show-help)
   (format #t "Usage: ~a PROGRAM [FILES ...] [-- ARGS ...]

@@ -27,12 +27,12 @@
 
 (define-module (al configs)
   #:use-module (srfi srfi-26)
+  #:use-module (al let-macros)
   #:use-module (al files)
   #:use-module (al links)
   #:use-module (al messages)
   #:use-module (al records)
   #:use-module (al sources)
-  #:use-module (al utils)
   #:export (make-config
             config*
             config?
@@ -106,10 +106,10 @@ returned by NAME-PROC procedure."
 (define* (deploy-config config #:optional (name-proc unique-filename))
   "Deploy (create symlinks) CONFIG record.
 See 'deploy-link' for the meaning of NAME-PROC."
-  (let ((links (config-links config)))
-    (unless (null? links)
-      (let ((name (config-name config)))
-        (message0 "Deploying '~a' configuration..." name)
-        (map (cut deploy-link <> name-proc) links)))))
+  (when-let ((links (config-links config))
+             (not-empty (not (null? links)))
+             (name (config-name config)))
+    (message0 "Deploying '~a' configuration..." name)
+    (map (cut deploy-link <> name-proc) links)))
 
 ;;; config.scm ends here

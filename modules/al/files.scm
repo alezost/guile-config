@@ -1,6 +1,6 @@
 ;;; files.scm --- Procedures for working with files
 
-;; Copyright © 2015, 2016 Alex Kost
+;; Copyright © 2015–2026 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created:  6 Mar 2015
@@ -36,6 +36,7 @@
 ;;; Code:
 
 (define-module (al files)
+  #:use-module (ice-9 rdelim)
   #:use-module (ice-9 match)
   #:use-module (ice-9 ftw)
   #:use-module (ice-9 regex)
@@ -57,7 +58,8 @@
             find-files
             find-matching-files
             delete-file-recursively
-            read-file))
+            read-file
+            read-number-from-file))
 
 (define (symlink? file)
   "Return #t if FILE is a symbolic link."
@@ -246,5 +248,13 @@ For example, (find-matching-files \"/foo/bar\") finds \"/foo/bar\",
     (lambda (port)
       (peek-char port)
       (drain-input port))))
+
+(define (read-number-from-file filename)
+  "Return a number read from the first line of FILENAME.
+Return #f in case of any error."
+  (false-if-exception
+   (with-input-from-file filename
+     (lambda ()
+       (string->number (read-line))))))
 
 ;;; files.scm ends here

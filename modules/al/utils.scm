@@ -39,7 +39,7 @@
   #:use-module (al let-macros)
   #:export (with-no-output
             remove-keywords
-            define-delayed
+            define-lazy
             memoize
             push!
             set-locale
@@ -51,13 +51,24 @@
             split
             split-path))
 
-(define-syntax-rule (define-delayed name expression)
-  "Define NAME thunk that will evaluate EXPRESSION, remember and return
-its value on a first call and will return this value on subsequent
-calls."
+(define-syntax-rule (define-lazy1 name doc body ...)
   (define name
-    (let ((value (delay expression)))
-      (lambda () (force value)))))
+    (let ((value (delay (begin body ...))))
+      (lambda () doc (force value)))))
+
+(define-syntax define-lazy
+  (lambda (x)
+    "Define NAME thunk that will evaluate BODY once (on the first call).
+NAME will return result of the first evaluation on subsequent calls
+without re-evaluating BODY.
+
+  (define-lazy NAME [DOC] BODY ...)"
+    (syntax-case x ()
+      ((_ name doc body ...)
+       (string? (syntax->datum #'doc))
+       #'(define-lazy1 name doc body ...))
+      ((_ name body ...)
+       #'(define-lazy1 name #f body ...)))))
 
 (define (memoize proc)
   "Return a memoizing version of PROC."

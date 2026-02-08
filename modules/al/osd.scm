@@ -38,7 +38,7 @@ OSD object is not defined immediately, it will be created on the first
 'name' call and will be returned on subsequent calls of NAME.
 
 Created OSD object is also registered with 'register-osd'."
-  (define-delayed name
+  (define-lazy name
     (let ((osd (make-osd args ...)))
       (register-osd osd)
       osd)))

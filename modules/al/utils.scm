@@ -48,6 +48,7 @@
             build-file-name
             min-string
             replace
+            scheme->lisp
             split
             split-path))
 
@@ -169,5 +170,12 @@ containing the elements after ELT."
 (define* (split-path #:optional (path (getenv "PATH")) (separator #\:))
   "Split PATH string into a list of substrings with SEPARATOR."
   (string-tokenize path (char-set-complement (char-set separator))))
+
+(define (scheme->lisp value)
+  "Convert Scheme value to Lisp value."
+  (case value
+    ((#t) 't)
+    ((#f) '())
+    (else value)))
 
 ;;; utils.scm ends here

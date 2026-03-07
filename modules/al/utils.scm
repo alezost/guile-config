@@ -145,7 +145,14 @@ into a single string using SEPARATOR."
 
 (define (build-file-name . file-parts)
   "Return file name by concatenating FILE-PARTS with slashes."
-  (mapconcat identity file-parts "/"))
+  (match file-parts
+    (() "/")
+    ((first-part . rest-parts)
+     (fold (lambda (part res)
+             (string-append (string-trim-right res #\/) "/"
+                            (string-trim-left part #\/)))
+           first-part
+           rest-parts))))
 
 (define (min-string . strings)
   "Like 'min' but performed on STRINGS.

@@ -41,12 +41,15 @@
   #:use-module (ice-9 ftw)
   #:use-module (ice-9 regex)
   #:use-module (srfi srfi-1)
+  #:use-module (al let-macros)
   #:use-module (al utils)
   #:export (symlink?
             executable?
             file-exists??
             build-file-name
             canonicalize-file-name
+            file-name-extension
+            file-name-sans-extension
             mkdir-with-parents
             which
             which-but
@@ -100,6 +103,30 @@ instead of raising an error."
   (catch 'system-error
     (lambda () (canonicalize-path file-name))
     (const #f)))
+
+(define (file-name-extension file-name)
+  "Return file extension from FILE-NAME."
+  (if-letn ((base    (basename file-name))
+            (dot-pos (string-rindex base #\.)))
+    (string-downcase (substring base
+                                (+ dot-pos 1)
+                                (string-length base)))
+    ""))
+
+(define (file-name-sans-extension file-name)
+  "Return FILE-NAME sans extension.
+I.e., remove everything from FILE-NAME after the last dot."
+  (let* ((base    (basename file-name))
+         (dir     (dirname file-name))
+         (dot-pos (string-rindex base #\.)))
+    (if (or (not dot-pos)
+            ;; File name starts with ".".
+            (char=? (string-ref base 0) #\.))
+      file-name
+      (let ((new-base (substring base 0 dot-pos)))
+        (if (string=? dir ".")  ; (dirname "foo") returns "."
+          new-base
+          (build-file-name dir new-base))))))
 
 (define (mkdir-with-parents dir)
   "Create directory DIR and all its ancestors."

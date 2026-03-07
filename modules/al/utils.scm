@@ -46,7 +46,6 @@
             string-trim-left    ; alias for `string-trim'
             mapconcat
             comma-separated
-            build-file-name
             min-string
             replace
             scheme->lisp
@@ -142,17 +141,6 @@ into a single string using SEPARATOR."
 (define (comma-separated . strings)
   "Return string by concatenating STRINGS with commas."
   (mapconcat identity strings ","))
-
-(define (build-file-name . file-parts)
-  "Return file name by concatenating FILE-PARTS with slashes."
-  (match file-parts
-    (() "/")
-    ((first-part . rest-parts)
-     (fold (lambda (part res)
-             (string-append (string-trim-right res #\/) "/"
-                            (string-trim-left part #\/)))
-           first-part
-           rest-parts))))
 
 (define (min-string . strings)
   "Like 'min' but performed on STRINGS.

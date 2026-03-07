@@ -1,6 +1,6 @@
 ;;; places.scm --- Where my files are placed
 
-;; Copyright © 2015, 2016 Alex Kost
+;; Copyright © 2015–2026 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created: 14 Feb 2015
@@ -25,7 +25,7 @@
 ;;; Code:
 
 (define-module (al places)
-  #:use-module (al utils)
+  #:use-module (al files)
   #:export (home-file
             bin-file
             config-file

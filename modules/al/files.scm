@@ -1,4 +1,4 @@
-;;; files.scm --- Procedures for working with files
+;;; files.scm --- Procedures for working with files and file names
 
 ;; Copyright © 2015–2026 Alex Kost
 
@@ -21,7 +21,7 @@
 ;;; Commentary:
 
 ;; This file provides several additional procedures to perform various
-;; actions on files.
+;; actions on files and their names.
 
 ;; The following procedures originate from (guix build utils) module:
 ;;
@@ -45,6 +45,7 @@
   #:export (symlink?
             executable?
             file-exists??
+            build-file-name
             canonicalize-file-name
             mkdir-with-parents
             which
@@ -80,6 +81,17 @@ target)."
       (catch 'system-error
         (lambda () (->bool (readlink filename)))
         (const #f))))
+
+(define (build-file-name . file-parts)
+  "Return file name by concatenating FILE-PARTS with slashes."
+  (match file-parts
+    (() "/")
+    ((first-part . rest-parts)
+     (fold (lambda (part res)
+             (string-append (string-trim-right res #\/) "/"
+                            (string-trim-left part #\/)))
+           first-part
+           rest-parts))))
 
 (define (canonicalize-file-name file-name)
   "Return the canonical name of FILE-NAME.

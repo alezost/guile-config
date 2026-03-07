@@ -46,7 +46,6 @@
             executable?
             file-exists??
             canonicalize-file-name
-            parent-directory
             mkdir-with-parents
             which
             which-but
@@ -89,20 +88,6 @@ instead of raising an error."
   (catch 'system-error
     (lambda () (canonicalize-path file-name))
     (const #f)))
-
-(define (parent-directory file)
-  "Return FILE's parent directory.
-FILE should be an absolute file name."
-  ;; Trim trailing slash as FILE may be "/tmp/foo" or "/tmp/foo/".
-  (let* ((file       (string-trim-right file #\/))
-         (last-slash (string-rindex file #\/))
-         (parent     (and last-slash
-                          (substring file 0 last-slash))))
-    ;; For "/foo" and "/" the parent is "/".
-    (if (or (not parent)
-            (string=? "" parent))
-        "/"
-        parent)))
 
 (define (mkdir-with-parents dir)
   "Create directory DIR and all its ancestors."

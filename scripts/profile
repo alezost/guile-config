@@ -73,7 +73,7 @@ Options:
 (define (make-profile-directory-maybe profile)
   "Create PROFILE's directory if it does not exist.
 PROFILE itself is a symlink, so make all its parent directories."
-  (let ((parent (parent-directory profile)))
+  (let ((parent (dirname profile)))
     (unless (file-exists? parent)
       (mkdir-with-parents parent))))
 

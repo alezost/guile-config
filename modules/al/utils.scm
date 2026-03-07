@@ -43,6 +43,7 @@
             memoize
             push!
             set-locale
+            string-trim-left    ; alias for `string-trim'
             mapconcat
             comma-separated
             build-file-name
@@ -124,6 +125,8 @@ info manual."
     (lambda _ (setlocale LC_ALL locale))
     (lambda (_ . args)
       (apply display-error #f (current-error-port) args))))
+
+(define string-trim-left string-trim)
 
 (define* (mapconcat proc lst #:optional (separator ""))
   "Apply PROC to each element of LST and concatenate the result strings

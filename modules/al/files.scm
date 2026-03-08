@@ -135,7 +135,7 @@ I.e., remove everything from FILE-NAME after the last dot."
                (root ""))
       (match components
         ((head tail ...)
-         (let ((file (string-append root "/" head)))
+         (let ((file (build-file-name root head)))
            (unless (file-exists? file)
              (mkdir file))
            (loop tail file)))

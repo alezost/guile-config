@@ -1,6 +1,6 @@
 #!/usr/bin/env guile
 !#
-;;; toggle-tvtime.scm --- Start or kill tvtime
+;;; toggle-tvtime --- Start or kill tvtime
 
 ;; Copyright © 2016 Alex Kost
 
@@ -57,4 +57,4 @@ ARGS are arguments passed to tvtime.
 (when (batch-mode?)
   (main (command-line)))
 
-;;; toggle-tvtime.scm ends here
+;;; toggle-tvtime ends here

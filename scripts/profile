@@ -1,6 +1,6 @@
 #!/usr/bin/env guile
 !#
-;;; profile.scm --- Populate my Guix profiles
+;;; profile --- Populate my Guix profiles
 
 ;; Copyright © 2015, 2016 Alex Kost
 
@@ -108,4 +108,4 @@ PROFILE itself is a symlink, so make all its parent directories."
 (when (batch-mode?)
   (main (command-line)))
 
-;;; profile.scm ends here
+;;; profile ends here

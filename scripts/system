@@ -1,6 +1,6 @@
 #!/usr/bin/env guile
 !#
-;;; system.scm --- Check, build or reconfigure Guix system
+;;; system --- Check, build or reconfigure Guix system
 
 ;; Copyright © 2015–2026 Alex Kost
 
@@ -82,4 +82,4 @@ Return #f if ACTION is unknown."
 (when (batch-mode?)
   (main (command-line)))
 
-;;; system.scm ends here
+;;; system ends here

@@ -1,6 +1,6 @@
 #!/usr/bin/env guile
 !#
-;;; runbut.scm --- Run program if it's not one of the undesired ones
+;;; runbut --- Run program if it's not one of the undesired ones
 
 ;; Copyright © 2016–2026 Alex Kost
 
@@ -67,4 +67,4 @@ Find PROGRAM in $PATH if it is not one of FILES and run it with ARGS.
 (when (batch-mode?)
   (main (command-line)))
 
-;;; runbut.scm ends here
+;;; runbut ends here

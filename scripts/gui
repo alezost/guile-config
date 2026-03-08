@@ -1,6 +1,6 @@
 #!/usr/bin/env guile
 !#
-;;; gui.scm --- Start GUI using Shepherd
+;;; gui --- Start GUI using Shepherd
 
 ;; Copyright © 2016–2026 Alex Kost
 
@@ -102,4 +102,4 @@ Options:
 (when (batch-mode?)
   (apply main (command-line)))
 
-;;; gui.scm ends here
+;;; gui ends here

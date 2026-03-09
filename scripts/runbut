@@ -44,7 +44,7 @@
  (srfi srfi-11)
  (al let-macros)
  (al files)
- (al utils)
+ (al lists)
  (al messages))
 
 (define (show-help)

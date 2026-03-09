@@ -34,15 +34,11 @@
 (define-module (al utils)
   #:use-module (ice-9 match)
   #:use-module (srfi srfi-1)
-  #:use-module (srfi srfi-11)
-  #:use-module (srfi srfi-26)
   #:use-module (al let-macros)
   #:export (with-no-output
             remove-keywords
             define-lazy
             memoize
-            map-indexed
-            for-each-indexed
             push!
             set-locale
             string->bool
@@ -50,11 +46,9 @@
             mapconcat
             comma-separated
             min-string
-            replace
             scheme->lisp
             digits
             format-index
-            split
             split-path))
 
 (define-syntax-rule (define-lazy1 name doc body ...)
@@ -87,26 +81,6 @@ without re-evaluating BODY.
                          list)))
           (hash-set! cache args results)
           (apply values results))))))
-
-(define-syntax-rule (iterate-indexed iterate proc lists ...)
-  "Helper for `map-indexed' and `for-each-indexed'."
-  (let ((index -1))
-    (iterate (lambda args
-               (set! index (1+ index))
-               (apply proc index args))
-             lists ...)))
-
-(define-syntax-rule (map-indexed proc lists ...)
-  "Apply PROC to index and each element of LISTS.
-This is the same as `map' except the first argument for PROC is
-index (starting from 0) of the current LISTS elements."
-  (iterate-indexed map proc lists ...))
-
-(define-syntax-rule (for-each-indexed proc lists ...)
-  "Apply PROC to index and each element of LISTS.
-This is the same as `for-each' except the first argument for PROC is
-index (starting from 0) of the current LISTS elements."
-  (iterate-indexed for-each proc lists ...))
 
 (define (remove-keywords args . keywords)
   "Remove keyword/value pairs from ARGS.
@@ -189,23 +163,6 @@ Return #f if STRINGS are not specified."
             (if (string< cur min) cur min))
           #f
           strings))
-
-(define (replace pred new lst)
-  "Replace element of LST matching PRED with NEW element."
-  (cons new (remove pred lst)))
-
-(define* (split lst elt #:optional (test equal?))
-  "Split LST into 2 lists by ELT.
-Compare list elements with TEST function.
-Return two values, a list containing the elements of the list LST
-that appear before the first occurence of the object ELT and a list
-containing the elements after ELT."
-  (let-values (((head tail)
-                (break (cut test elt <>) lst)))
-    (values head
-            (match tail
-              (() '())
-              ((_ rest ...) rest)))))
 
 (define* (split-path #:optional (path (getenv "PATH")) (separator #\:))
   "Split PATH string into a list of substrings with SEPARATOR."

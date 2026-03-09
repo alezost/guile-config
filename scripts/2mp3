@@ -1,0 +1,172 @@
+#!/usr/bin/env guile
+!#
+;;; 2mp3 --- Convert media files to MP3 format
+
+;; Copyright © 2026 Alex Kost
+
+;; Author: Alex Kost <alezost@gmail.com>
+;; Created: 6 Mar 2026
+
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
+;;
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
+;;
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+;;; Commentary:
+
+;; This script allows to convert audio or video file(s) to MP3 file(s)
+;; using ffmpeg.
+
+(use-modules
+ (srfi srfi-1)
+ (srfi srfi-37)
+ (al let-macros)
+ (al utils)
+ (al files)
+ (al messages))
+
+(define (show-help)
+  (format #t "Usage: ~a [OPTIONS ...] SOURCE [DESTINATION]"
+          (car (command-line)))
+  (display "
+Convert audio/video file(s) to MP3 format.
+
+Arguments:
+  SOURCE            media file or a directory with media files
+  DESTINATION       output directory (same as SOURCE by default)
+
+Options:
+  -h, --help        display this help and exit
+
+  -R VALUE, --recursive=VALUE
+        If \"y\"/\"yes\" (default), copy files from SOURCE recursively.
+        If \"n\"/\"no\", do not copy SOURCE sub-directories.")
+  (newline))
+
+(define %options
+  (list
+   (option '(#\h "help") #f #f
+           (lambda _
+             (show-help)
+             (exit 0)))
+   (option '(#\R "recursive") #t #f
+           (lambda (opt name arg seed)
+             (assq-set! seed 'recursive? (string->bool arg))))))
+
+(define (parse-args args)
+  "Return alist of options from command-line ARGS."
+  (args-fold
+   args %options
+   (lambda (opt name arg seed)
+     (print-error "Unrecognized option: \"~a\"." name)
+     seed)
+   (lambda (arg seed)
+     (if (assq 'destination seed)
+       (begin
+         (print-error "Too many positional arguments.
+Ignoring everything after DESTINATION.")
+         seed)
+       (if (assq 'source seed)
+         (acons 'destination arg seed)
+         (acons 'source arg seed))))
+   (list (cons 'recursive? #t))))
+
+(define %extensions
+  '("mp3" "wav" "flac" "m4a" "wma" "ogg"
+    "mp4" "avi" "mkv" "wmv" "webm" "mpeg" "mpg" "mov"))
+
+(define %extension-regexp
+  (make-regexp (string-append "\\.("
+                              (string-join %extensions "|")
+                              ")$")
+               regexp/icase))
+
+(define* (find-media-files directory #:optional recursive?)
+  "Return list of media files in DIRECTORY.
+If RECURSIVE? is #f, scan DIRECTORY only (without subdirs), otherwise
+traverse the whole DIRECTORY tree."
+  (find-files directory %extension-regexp #:enter-tree? recursive?))
+
+(define (convert-file input-file output-file)
+  "Convert INPUT-FILE to OUTPUT-FILE using ffmpeg.
+Return #t if INPUT-FILE is converted successfully, return #f otherwise."
+  (print-output "\f")
+  (print-output "Input:  ~a" input-file)
+  (print-output "Output: ~a" output-file)
+  (let ((dir (dirname output-file)))
+    (unless (file-exists? dir)
+      (print-output "Making directory: ~a" dir)
+      (mkdir-with-parents dir)))
+  (let ((exit-status (system* "ffmpeg" "-i" input-file output-file)))
+    (if (zero? (status:exit-val exit-status))
+      (begin
+        (print-output "Convertion succeeded.")
+        #t)
+      (begin
+        (print-output "Convertion failed.")
+        #f))))
+
+(define (mp3-file-name file-name)
+  "Return output mp3 file name for the input FILE-NAME."
+  (string-append (file-name-sans-extension file-name)
+                 ".mp3"))
+
+(define* (convert-source source destination #:optional recursive?)
+  "Convert SOURCE file or directory into MP3 format."
+  (unless (file-exists? source)
+    (leave "Source does not exist: ~a" source))
+
+  (when (and destination
+             (not (file-exists? destination)))
+    (leave "Destination directory does not exist: ~a" destination))
+
+  (let* ((source         (canonicalize-file-name source))
+         (destination    (and destination
+                              (canonicalize-file-name destination)))
+         (source-is-dir? (file-is-directory? source))
+         (source-dir     (if source-is-dir?
+                           source
+                           (dirname source)))
+         (output-dir     (or destination source-dir))
+         (input-names    (if source-is-dir?
+                           (find-media-files source-dir recursive?)
+                           (list source))))
+    (if (null? input-names)
+      (begin
+        (print-output "No media files found in \"~a\"." source-dir)
+        (exit 0))
+      (let ((total (length input-names)))
+        (print-output "Number of files to convert: ~a." total)
+        (let* ((source-length (string-length source-dir))
+               (output (lambda (input-name)
+                         (mp3-file-name
+                          (build-file-name output-dir
+                                           (substring input-name
+                                                      source-length)))))
+               (successes (count (lambda (input)
+                                   (convert-file input (output input)))
+                                 input-names))
+               (fails (- total successes)))
+          (print-output "~a files converted successfully, ~a failed."
+                        successes fails))))))
+
+(define (main arg0 . args)
+  (if-letn ((opts   (parse-args args))
+            (source (assq-ref opts 'source)))
+    (convert-source source
+                    (assq-ref opts 'destination)
+                    (assq-ref opts 'recursive?))
+    (leave "No source specified, try --help for more information")))
+
+(when (batch-mode?)
+  (apply main (command-line)))
+
+;;; 2mp3 ends here

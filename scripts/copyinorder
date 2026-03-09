@@ -21,7 +21,6 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (use-modules
- (ice-9 match)
  (srfi srfi-26)
  (srfi srfi-37)
  (al let-macros)
@@ -108,16 +107,13 @@ Ignoring everything after DESTINATION.")
                                    (substring name (1+ source-length)))
                                  full-names))
              (rel-names     (sort rel-names string<)))
-        (let loop ((i 1)
-                   (names rel-names))
-          (match names
-            (() #f)
-            ((name . rest)
-             (let ((old-name (build-file-name source      name))
-                   (new-name (build-file-name destination name)))
-               (print-output "[~2d of ~d] ~a" i total new-name)
-               (copy-file* old-name new-name))
-             (loop (1+ i) rest))))))))
+        (for-each-indexed
+         (lambda (i name)
+           (let ((old-name (build-file-name source      name))
+                 (new-name (build-file-name destination name)))
+             (print-output "[~2d of ~d] ~a" i total new-name)
+             (copy-file* old-name new-name)))
+         rel-names)))))
 
 (define (main arg0 . args)
   (if-let ((opts        (parse-args args))

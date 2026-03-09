@@ -53,7 +53,14 @@
 (define message1 (message-proc #:indent-level 1))
 
 (define print-output message0)
-(define print-error (message-proc #:destination (current-error-port)))
+
+;; (define print-error (message-proc #:destination (current-error-port)))
+
+;; The above definition fails in REPL, probably because
+;; (current-error-port) is evaluated too early and is never changed
+;; once `print-error' is defined.
+(define (print-error format-string . args)
+  (apply message 0 (current-error-port) format-string args))
 
 (define (leave format-string . args)
   "Print message to STDERR and exit."

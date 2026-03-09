@@ -52,6 +52,7 @@
             min-string
             replace
             scheme->lisp
+            digits
             split
             split-path))
 
@@ -213,5 +214,13 @@ containing the elements after ELT."
     ((#t) 't)
     ((#f) '())
     (else value)))
+
+(define (digits integer)
+  "Return the number of digits in INTEGER."
+  (cond
+   ((positive? integer)
+    (1+ (inexact->exact (floor (log10 integer)))))
+   ((zero? integer) 1)
+   (else (digits (- integer)))))
 
 ;;; utils.scm ends here

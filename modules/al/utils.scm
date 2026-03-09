@@ -41,6 +41,8 @@
             remove-keywords
             define-lazy
             memoize
+            map-indexed
+            for-each-indexed
             push!
             set-locale
             string->bool
@@ -83,6 +85,26 @@ without re-evaluating BODY.
                          list)))
           (hash-set! cache args results)
           (apply values results))))))
+
+(define-syntax-rule (iterate-indexed iterate proc lists ...)
+  "Helper for `map-indexed' and `for-each-indexed'."
+  (let ((index -1))
+    (iterate (lambda args
+               (set! index (1+ index))
+               (apply proc index args))
+             lists ...)))
+
+(define-syntax-rule (map-indexed proc lists ...)
+  "Apply PROC to index and each element of LISTS.
+This is the same as `map' except the first argument for PROC is
+index (starting from 0) of the current LISTS elements."
+  (iterate-indexed map proc lists ...))
+
+(define-syntax-rule (for-each-indexed proc lists ...)
+  "Apply PROC to index and each element of LISTS.
+This is the same as `for-each' except the first argument for PROC is
+index (starting from 0) of the current LISTS elements."
+  (iterate-indexed for-each proc lists ...))
 
 (define (remove-keywords args . keywords)
   "Remove keyword/value pairs from ARGS.

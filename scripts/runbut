@@ -58,7 +58,7 @@ Find PROGRAM in $PATH if it is not one of FILES and run it with ARGS.
     (((or "-h" "--help" "help") _ ...)
      (show-help))
     ((program rest ...)
-     (let-values (((files args) (split rest "--")))
+     (let-values (((files args) (split rest "--" string=?)))
        (if-let ((prog (apply which-but program files)))
          (apply system* prog args)
          (leave "Program not found: ~a" program))))

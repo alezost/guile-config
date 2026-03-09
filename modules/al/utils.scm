@@ -194,12 +194,14 @@ Return #f if STRINGS are not specified."
   "Replace element of LST matching PRED with NEW element."
   (cons new (remove pred lst)))
 
-(define (split lst elt)
-  "Return two values, a list containing the elements of the list LST
+(define* (split lst elt #:optional (test equal?))
+  "Split LST into 2 lists by ELT.
+Compare list elements with TEST function.
+Return two values, a list containing the elements of the list LST
 that appear before the first occurence of the object ELT and a list
 containing the elements after ELT."
   (let-values (((head tail)
-                (break (cut string=? elt <>) lst)))
+                (break (cut test elt <>) lst)))
     (values head
             (match tail
               (() '())

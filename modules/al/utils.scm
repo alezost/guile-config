@@ -53,6 +53,7 @@
             replace
             scheme->lisp
             digits
+            format-index
             split
             split-path))
 
@@ -222,5 +223,11 @@ containing the elements after ELT."
     (1+ (inexact->exact (floor (log10 integer)))))
    ((zero? integer) 1)
    (else (digits (- integer)))))
+
+(define (format-index index total)
+  (let ((fmt (string-append "[~"
+                            (number->string (digits total))
+                            "d of ~d]")))
+    (format #f fmt index total)))
 
 ;;; utils.scm ends here

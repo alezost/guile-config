@@ -111,7 +111,9 @@ Ignoring everything after DESTINATION.")
          (lambda (i name)
            (let ((old-name (build-file-name source      name))
                  (new-name (build-file-name destination name)))
-             (print-output "[~2d of ~d] ~a" i total new-name)
+             (print-output "~a ~a"
+                           (format-index (1+ i) total)
+                           new-name)
              (copy-file* old-name new-name)))
          rel-names)))))
 

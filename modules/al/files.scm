@@ -51,6 +51,7 @@
             file-name-extension
             file-name-sans-extension
             mkdir-with-parents
+            copy-file*
             which
             which-but
             program-exists?
@@ -140,6 +141,15 @@ I.e., remove everything from FILE-NAME after the last dot."
              (mkdir file))
            (loop tail file)))
         (_ #t)))))
+
+(define (copy-file* old-name new-name)
+  "Copy OLD-NAME file to NEW-NAME.
+This is the same as `copy-file' except it also creates parent directory
+for NEW-NAME if it does not exist."
+  (let ((dir (dirname new-name)))
+    (unless (file-exists? dir)
+      (mkdir-with-parents dir)))
+  (copy-file old-name new-name))
 
 (define (which program)
   "Return full file name of PROGRAM found in $PATH.

@@ -41,11 +41,6 @@
             memoize
             push!
             set-locale
-            string->bool
-            string-trim-left    ; alias for `string-trim'
-            mapconcat
-            comma-separated
-            min-string
             scheme->lisp
             digits
             format-index
@@ -123,46 +118,6 @@ info manual."
     (lambda _ (setlocale LC_ALL locale))
     (lambda (_ . args)
       (apply display-error #f (current-error-port) args))))
-
-(define (string->bool string)
-  "Convert STRING into the boolean value.
-If STRING is \"y\"/\"yes\"/\"true\", return #t.
-If STRING is \"n\"/\"no\"/\"false\", return #f."
-  (cond
-   ((member string '("y" "yes" "true"))
-    #t)
-   ((member string '("n" "no" "false"))
-    #f)
-   (else
-    (format (current-error-port)
-            "'~a' should be a string with boolean value~%"
-            string)
-    (raise-exception &error))))
-
-(define string-trim-left string-trim)
-
-(define* (mapconcat proc lst #:optional (separator ""))
-  "Apply PROC to each element of LST and concatenate the result strings
-into a single string using SEPARATOR."
-  (match lst
-    (() "")
-    ((elt . rest)
-     (fold (lambda (elt res)
-             (string-append res separator (proc elt)))
-           (proc elt)
-           rest))))
-
-(define (comma-separated . strings)
-  "Return string by concatenating STRINGS with commas."
-  (mapconcat identity strings ","))
-
-(define (min-string . strings)
-  "Like 'min' but performed on STRINGS.
-Return #f if STRINGS are not specified."
-  (reduce (lambda (cur min)
-            (if (string< cur min) cur min))
-          #f
-          strings))
 
 (define* (split-path #:optional (path (getenv "PATH")) (separator #\:))
   "Split PATH string into a list of substrings with SEPARATOR."

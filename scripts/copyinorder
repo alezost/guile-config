@@ -25,6 +25,7 @@
  (srfi srfi-37)
  (al let-macros)
  (al lists)
+ (al strings)
  (al utils)
  (al files)
  (al messages))

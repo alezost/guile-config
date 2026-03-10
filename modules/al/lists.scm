@@ -31,7 +31,8 @@
   #:export (replace
             split
             map-indexed
-            for-each-indexed))
+            for-each-indexed
+            count-indexed))
 
 (define (replace pred new lst)
   "Replace element of LST matching PRED with NEW element."
@@ -51,7 +52,7 @@ containing the elements after ELT."
               ((_ rest ...) rest)))))
 
 (define-syntax-rule (iterate-indexed iterate proc lists ...)
-  "Helper for `map-indexed' and `for-each-indexed'."
+  "Helper for `map-indexed' and similar procedures."
   (let ((index -1))
     (iterate (lambda args
                (set! index (1+ index))
@@ -69,5 +70,11 @@ index (starting from 0) of the current LISTS elements."
 This is the same as `for-each' except the first argument for PROC is
 index (starting from 0) of the current LISTS elements."
   (iterate-indexed for-each proc lists ...))
+
+(define-syntax-rule (count-indexed proc lists ...)
+  "Apply PROC to index and each element of LISTS.
+This is the same as `count' except the first argument for PROC is
+index (starting from 0) of the current LISTS elements."
+  (iterate-indexed count proc lists ...))
 
 ;;; lists.scm ends here

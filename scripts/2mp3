@@ -29,6 +29,7 @@
  (srfi srfi-1)
  (srfi srfi-37)
  (al let-macros)
+ (al lists)
  (al strings)
  (al utils)
  (al files)
@@ -99,7 +100,6 @@ traverse the whole DIRECTORY tree."
 (define (convert-file input-file output-file)
   "Convert INPUT-FILE to OUTPUT-FILE using ffmpeg.
 Return #t if INPUT-FILE is converted successfully, return #f otherwise."
-  (print-output "\f")
   (print-output "Input:  ~a" input-file)
   (print-output "Output: ~a" output-file)
   (let ((dir (dirname output-file)))
@@ -152,9 +152,12 @@ Return #t if INPUT-FILE is converted successfully, return #f otherwise."
                           (build-file-name output-dir
                                            (substring input-name
                                                       source-length)))))
-               (successes (count (lambda (input)
-                                   (convert-file input (output input)))
-                                 input-names))
+               (successes (count-indexed
+                           (lambda (i input)
+                             (print-output "\f")
+                             (print-output "~a" (format-index (1+ i) total))
+                             (convert-file input (output input)))
+                           input-names))
                (fails (- total successes)))
           (print-output "~a files converted successfully, ~a failed."
                         successes fails))))))

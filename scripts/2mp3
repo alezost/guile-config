@@ -35,6 +35,8 @@
  (al files)
  (al messages))
 
+(define %default-ffmpeg-options "-q:a 2")
+
 (define (show-help)
   (format #t "Usage: ~a [OPTIONS ...] SOURCE [DESTINATION]"
           (car (command-line)))
@@ -50,7 +52,11 @@ Options:
 
   -R VALUE, --recursive=VALUE
         If \"y\"/\"yes\" (default), copy files from SOURCE recursively.
-        If \"n\"/\"no\", do not copy SOURCE sub-directories.")
+        If \"n\"/\"no\", do not copy SOURCE sub-directories.
+
+  -f VALUE, --ffmpeg-options=VALUE
+        Output options passed to ffmpeg.")
+  (format #t "  Default: \"~a\"." %default-ffmpeg-options)
   (newline))
 
 (define %options
@@ -59,6 +65,9 @@ Options:
            (lambda _
              (show-help)
              (exit 0)))
+   (option '(#\f "ffmpeg-options") #t #f
+           (lambda (opt name arg seed)
+             (assq-set! seed 'ffmpeg-options arg)))
    (option '(#\R "recursive") #t #f
            (lambda (opt name arg seed)
              (assq-set! seed 'recursive? (string->bool arg))))))
@@ -97,17 +106,19 @@ If RECURSIVE? is #f, scan DIRECTORY only (without subdirs), otherwise
 traverse the whole DIRECTORY tree."
   (find-files directory %extension-regexp #:enter-tree? recursive?))
 
-(define (convert-file input-file output-file)
+(define (convert-file input-file output-file ffmpeg-options)
   "Convert INPUT-FILE to OUTPUT-FILE using ffmpeg.
+FFMPEG-OPTIONS is a string with output options.
 Return #t if INPUT-FILE is converted successfully, return #f otherwise."
-  (print-output "Input:  ~a" input-file)
-  (print-output "Output: ~a" output-file)
   (let ((dir (dirname output-file)))
     (unless (file-exists? dir)
       (print-output "Making directory: ~a" dir)
       (mkdir-with-parents dir)))
-  (let ((exit-status (system* "ffmpeg" "-i" input-file output-file)))
-    (if (zero? (status:exit-val exit-status))
+  (let ((cmd (append (list "ffmpeg" "-i" input-file)
+                     (string-split ffmpeg-options #\space)
+                     (list output-file))))
+    (print-output "Running command: ~a" cmd)
+    (if (zero? (status:exit-val (apply system* cmd)))
       (begin
         (print-output "Convertion succeeded.")
         #t)
@@ -120,8 +131,10 @@ Return #t if INPUT-FILE is converted successfully, return #f otherwise."
   (string-append (file-name-sans-extension file-name)
                  ".mp3"))
 
-(define* (convert-source source destination #:optional recursive?)
-  "Convert SOURCE file or directory into MP3 format."
+(define* (convert-source source destination
+                         #:key recursive? ffmpeg-options)
+  "Convert SOURCE file or directory into MP3 format.
+FFMPEG-OPTIONS is a string with output options for ffmpeg."
   (unless (file-exists? source)
     (leave "Source does not exist: ~a" source))
 
@@ -156,7 +169,7 @@ Return #t if INPUT-FILE is converted successfully, return #f otherwise."
                            (lambda (i input)
                              (print-output "\f")
                              (print-output "~a" (format-index (1+ i) total))
-                             (convert-file input (output input)))
+                             (convert-file input (output input) ffmpeg-options))
                            input-names))
                (fails (- total successes)))
           (print-output "~a files converted successfully, ~a failed."
@@ -167,7 +180,8 @@ Return #t if INPUT-FILE is converted successfully, return #f otherwise."
             (source (assq-ref opts 'source)))
     (convert-source source
                     (assq-ref opts 'destination)
-                    (assq-ref opts 'recursive?))
+                    #:ffmpeg-options (assq-ref opts 'ffmpeg-options)
+                    #:recursive?     (assq-ref opts 'recursive?))
     (leave "No source specified, try --help for more information")))
 
 (when (batch-mode?)

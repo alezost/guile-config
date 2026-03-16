@@ -110,10 +110,7 @@ traverse the whole DIRECTORY tree."
   "Convert INPUT-FILE to OUTPUT-FILE using ffmpeg.
 FFMPEG-OPTIONS is a string with output options.
 Return #t if INPUT-FILE is converted successfully, return #f otherwise."
-  (let ((dir (dirname output-file)))
-    (unless (file-exists? dir)
-      (print-output "Making directory: ~a" dir)
-      (mkdir-with-parents dir)))
+  (mkdir-with-parents (dirname output-file))
   (let ((cmd (append (list "ffmpeg" "-i" input-file)
                      (string-split ffmpeg-options #\space)
                      (list output-file))))

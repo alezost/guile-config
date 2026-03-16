@@ -132,24 +132,23 @@ I.e., remove everything from FILE-NAME after the last dot."
 
 (define (mkdir-with-parents dir)
   "Create directory DIR and all its ancestors."
-  (let ((not-slash (char-set-complement (char-set #\/))))
-    (let loop ((components (string-tokenize dir not-slash))
-               (root ""))
-      (match components
-        ((head tail ...)
-         (let ((file (build-file-name root head)))
-           (unless (file-exists? file)
-             (mkdir file))
-           (loop tail file)))
-        (_ #t)))))
+  (unless (file-exists? dir)
+    (let ((not-slash (char-set-complement (char-set #\/))))
+      (let loop ((components (string-tokenize dir not-slash))
+                 (root ""))
+        (match components
+          ((head tail ...)
+           (let ((file (build-file-name root head)))
+             (unless (file-exists? file)
+               (mkdir file))
+             (loop tail file)))
+          (_ #t))))))
 
 (define (copy-file* old-name new-name)
   "Copy OLD-NAME file to NEW-NAME.
 This is the same as `copy-file' except it also creates parent directory
 for NEW-NAME if it does not exist."
-  (let ((dir (dirname new-name)))
-    (unless (file-exists? dir)
-      (mkdir-with-parents dir)))
+  (mkdir-with-parents (dirname new-name))
   (copy-file old-name new-name))
 
 (define (which program)

@@ -74,8 +74,7 @@ returned by NAME-PROC procedure."
       (let* ((filename (link-filename link))
              (target   (link-target link))
              (dir      (dirname filename)))
-        (unless (file-exists? dir)
-          (mkdir-with-parents dir))
+        (mkdir-with-parents dir)
         (if (with-directory-excursion dir
               (file-exists? target))
             (begin

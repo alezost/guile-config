@@ -139,6 +139,8 @@ info manual."
    (else (digits (- integer)))))
 
 (define (format-index index total)
+  "Return string showing INDEX of TOTAL values.
+INDEX and TOTAL should be positive integers."
   (let ((fmt (string-append "[~"
                             (number->string (digits total))
                             "d of ~d]")))

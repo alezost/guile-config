@@ -88,7 +88,8 @@ Ignoring everything after DESTINATION.")
        (if (assq 'source seed)
          (acons 'destination arg seed)
          (acons 'source arg seed))))
-   (list (cons 'recursive? #t))))
+   (list (cons 'recursive? #t)
+         (cons 'ffmpeg-options %default-ffmpeg-options))))
 
 (define %extensions
   '("mp3" "wav" "flac" "m4a" "wma" "ogg"

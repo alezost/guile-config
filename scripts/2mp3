@@ -136,13 +136,7 @@ FFMPEG-OPTIONS is a string with output options for ffmpeg."
   (unless (file-exists? source)
     (leave "Source does not exist: ~a" source))
 
-  (when (and destination
-             (not (file-exists? destination)))
-    (leave "Destination directory does not exist: ~a" destination))
-
   (let* ((source         (canonicalize-file-name source))
-         (destination    (and destination
-                              (canonicalize-file-name destination)))
          (source-is-dir? (file-is-directory? source))
          (source-dir     (if source-is-dir?
                            source

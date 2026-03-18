@@ -35,7 +35,7 @@
  (al files)
  (al messages))
 
-(define %default-ffmpeg-options "-q:a 2")
+(define %default-ffmpeg-options "-q:a 3")
 
 (define (show-help)
   (format #t "Usage: ~a [OPTIONS ...] SOURCE [DESTINATION]"

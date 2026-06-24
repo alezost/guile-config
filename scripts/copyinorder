@@ -21,6 +21,8 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 (use-modules
+ (ice-9 string-fun)
+ (ice-9 match)
  (srfi srfi-26)
  (srfi srfi-37)
  (al let-macros)
@@ -87,6 +89,26 @@ Ignoring everything after DESTINATION.")
    (list (cons 'recursive? #t)
          (cons 'regexp %regexp))))
 
+(define file-name-fix-alist
+  '(("\"" "'")
+    (":" ".")
+    ("?" ".")
+    ("*" "+")
+    ("<" "(")
+    (">" ")")
+    ("\\" "_")
+    ("|" "_")))
+
+(define (fix-file-name file-name)
+  "Modify FILE-NAME to make it compatible with VFAT file system."
+  (let loop ((name file-name)
+             (alist file-name-fix-alist))
+    (match alist
+      (() name)
+      (((substr replacement) rest ...)
+       (loop (string-replace-substring name substr replacement)
+             rest)))))
+
 (define* (copy-source source destination
                       #:key recursive? regexp)
   "Copy files from SOURCE directory to DESTINATION directory."
@@ -95,6 +117,7 @@ Ignoring everything after DESTINATION.")
     (leave "Source directory does not exist: ~a" source))
 
   (let* ((destination (build-file-name destination (basename source)))
+         (destination (fix-file-name destination))
          (source      (canonicalize-file-name source))
          (full-names  (find-files source regexp
                                   #:enter-tree? recursive?
@@ -111,8 +134,9 @@ Ignoring everything after DESTINATION.")
              (rel-names     (sort rel-names string<)))
         (for-each-indexed
          (lambda (i name)
-           (let ((old-name (build-file-name source      name))
-                 (new-name (build-file-name destination name)))
+           (let ((old-name (build-file-name source name))
+                 (new-name (build-file-name destination
+                                            (fix-file-name name))))
              (print-output "~a ~a"
                            (format-index (1+ i) total)
                            new-name)

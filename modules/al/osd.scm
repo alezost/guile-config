@@ -18,6 +18,7 @@
 (define-module (al osd)
   #:use-module (xosd)
   #:use-module (al utils)
+  #:use-module (al lists)
   #:export (show-osds
             hide-osds
             register-osd

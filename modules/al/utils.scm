@@ -39,7 +39,6 @@
             remove-keywords
             define-lazy
             memoize
-            push!
             set-locale
             scheme->lisp
             digits
@@ -99,10 +98,6 @@ info manual."
                (cons* value keyword result))))
       ((arg . rest)
        (loop rest (cons arg result))))))
-
-(define-syntax-rule (push! elt lst)
-  "Add ELT to LST."
-  (set! lst (cons elt lst)))
 
 (define-syntax-rule (with-no-output body ...)
   "Do not display any output while running BODY."

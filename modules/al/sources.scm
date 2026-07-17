@@ -28,6 +28,8 @@
 ;;; Code:
 
 (define-module (al sources)
+  #:use-module (al let-macros)
+  #:use-module (al messages)
   #:use-module (al records)
   #:export (make-source
             source*
@@ -56,10 +58,11 @@
 (define (fetch-source source)
   "Fetch SOURCE from remote to local place.
 Initialize the local directory or update it if it already exists."
-  (let ((uri (source-uri source))
-        (dir (source-directory source)))
-    (if (file-exists? dir)
-        (git-pull dir)
-        (git-clone uri dir))))
+  (if-let ((uri (source-uri source)))
+    (if-let ((dir (source-directory source)
+                  (<= file-exists?)))
+      (git-pull dir)
+      (git-clone uri dir))
+    (print-error "URI does not exist for ~a" source)))
 
 ;;; sources.scm ends here

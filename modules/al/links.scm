@@ -1,6 +1,6 @@
 ;;; links.scm --- Procedures for working with symlinks
 
-;; Copyright © 2015 Alex Kost
+;; Copyright © 2015–2026 Alex Kost
 
 ;; Author: Alex Kost <alezost@gmail.com>
 ;; Created:  6 Mar 2015
@@ -26,6 +26,7 @@
 ;;; Code:
 
 (define-module (al links)
+  #:use-module (al let-macros)
   #:use-module (al files)
   #:use-module (al records)
   #:export (make-link
@@ -51,11 +52,12 @@
 
 (define (link-exists? link)
   "Return #t if symlink defined by LINK record exists in the file system."
-  (let ((filename (link-filename link))
-        (target   (link-target link)))
-    (and (file-exists? filename)
-         (symlink? filename)
-         (equal? (readlink filename) target))))
+  (when-let ((filename (link-filename link)
+                       (<= file-exists?
+                           symlink?)
+                       (=> readlink))
+             (target   (link-target link)))
+    (equal? filename target)))
 
 (define (create-link link)
   "Create symlink defined by LINK record."

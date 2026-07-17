@@ -41,6 +41,7 @@
   #:use-module (ice-9 ftw)
   #:use-module (ice-9 regex)
   #:use-module (srfi srfi-1)
+  #:use-module (srfi srfi-26)
   #:use-module (al let-macros)
   #:use-module (al strings)
   #:use-module (al utils)
@@ -93,7 +94,8 @@ target)."
     (() "/")
     ((first-part . rest-parts)
      (fold (lambda (part res)
-             (string-append (string-trim-right res #\/) "/"
+             (string-append (string-trim-right res #\/)
+                            "/"
                             (string-trim-left part #\/)))
            first-part
            rest-parts))))
@@ -165,12 +167,12 @@ Return #f if PROGRAM is not found."
       (match dirs
         (() #f)
         ((dir rest-dirs ...)
-         (let* ((prog (build-file-name dir program))
-                (prog (and (executable? prog)
-                           (canonicalize-file-name prog))))
-           (if (and prog (not (member prog files)))
-               prog
-               (loop rest-dirs))))))))
+         (if-let ((prog (build-file-name dir program)
+                        (<= executable?)
+                        (=> canonicalize-file-name)
+                        (<= (negate (cut member <> files)))))
+           prog
+           (loop rest-dirs)))))))
 
 (define (program-exists? program)
   "Check if program exists in $PATH."

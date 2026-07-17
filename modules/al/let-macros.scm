@@ -24,8 +24,7 @@
 ;;; Code:
 
 (define-module (al let-macros)
-  ;; #:use-module (ice-9 and-let-star)
-  ;; #:re-export ((and-let* . and-let))
+  #:use-module (al fp-utils)
   #:export (
             if-let
             if-let1
@@ -35,17 +34,43 @@
             when-letn))
 
 (define-syntax if-let
-  (syntax-rules ()
-    ;; Single binding.
+  (syntax-rules (<= =>)
+    ;; Base case: a single binding without extra clauses.
     ((_ ((var expr)) then else)
      (let ((var expr))
        (if var then else)))
-    ;; Multiple bindings.
-    ((_ ((var expr) rest ...) then else)
+
+    ;; Multiple bindings without extra clauses: reduce bindings.
+    ((if-let ((var expr)
+              rest-bindings ...)
+       then else)
      (let ((var expr))
        (if var
-         (if-let (rest ...) then else)
+         (if-let (rest-bindings ...) then else)
          else)))
+
+    ;; Multiple bindings with extra <= clause: reduce clauses.
+    ((if-let ((var expr
+                   (<= procedures ...)
+                   rest-clauses ...)
+              rest-bindings ...)
+       then else)
+     (if-let ((var (and<= expr identity procedures ...)
+                   rest-clauses ...)
+              rest-bindings ...)
+       then else))
+
+    ;; Multiple bindings with extra => clause: reduce clauses.
+    ((if-let ((var expr
+                   (=> procedures ...)
+                   rest-clauses ...)
+              rest-bindings ...)
+       then else)
+     (if-let ((var (and=> expr procedures ...)
+                   rest-clauses ...)
+              rest-bindings ...)
+       then else))
+
     ;; No else clause.
     ((_ bindings then)
      (if-let bindings then #f))))

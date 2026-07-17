@@ -1,4 +1,4 @@
-;;; let-macros.scm --- `if-let' syntax family
+;;; let-macros.scm --- `let' syntax family
 
 ;; Copyright © 2026 Alex Kost
 
@@ -19,19 +19,64 @@
 
 ;;; Commentary:
 
-;; This file provides `if-let' and similar macros.
+;; This file provides `let+' which is an augmented `let*' and
+;; `if-let'-like macros.
 
 ;;; Code:
 
 (define-module (al let-macros)
   #:use-module (al fp-utils)
-  #:export (
+  #:export (let+
             if-let
             if-let1
             if-letn
             when-let
             when-let1
             when-letn))
+
+(define-syntax let+
+  (syntax-rules (<= =>)
+    ;; Base case: a single binding without extra clauses.
+    ((let+ () body ...)
+     (begin body ...))
+
+    ;; Multiple bindings without extra clauses: reduce bindings.
+    ((let+ ((var expr)
+            rest-bindings ...)
+       body ...)
+     (let ((var expr))
+       (let+ (rest-bindings ...)
+         body ...)))
+
+    ;; Multiple bindings with extra <= clause: reduce clauses.
+    ((let+ ((var expr
+                 (<= procedures ...))
+            rest-bindings ...)
+       body ...)
+     (when-let ((var (and<= expr procedures ...)))
+       (let+ (rest-bindings ...)
+         body ...)))
+
+    ((let+ ((var expr
+                 (<= procedures ...)
+                 rest-clauses ...)
+            rest-bindings ...)
+       body ...)
+     (when-let ((var (and<= expr procedures ...)))
+       (let+ ((var var rest-clauses ...)
+              rest-bindings ...)
+         body ...)))
+
+    ;; Multiple bindings with extra => clause: reduce clauses.
+    ((let+ ((var expr
+                 (=> procedures ...)
+                 rest-clauses ...)
+            rest-bindings ...)
+       body ...)
+     (let+ ((var (and=> expr procedures ...)
+                 rest-clauses ...)
+            rest-bindings ...)
+       body ...))))
 
 (define-syntax if-let
   (syntax-rules (<= =>)
@@ -83,7 +128,7 @@
     ;; Multiple bindings.
     ((_ (first rest ...) then else)
      (if-let (first)
-       (let* (rest ...)
+       (let+ (rest ...)
          then)
        else))
     ;; No else clause.
@@ -97,7 +142,7 @@
      (if-let (binding) then ...))
     ;; Multiple bindings.
     ((_ (first rest ...) then ...)
-     (let (first)
+     (let+ (first)
        (if-letn (rest ...)
          then ...)))))
 

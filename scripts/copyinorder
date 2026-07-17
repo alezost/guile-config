@@ -116,8 +116,8 @@ Ignoring everything after DESTINATION.")
                (file-is-directory? source))
     (leave "Source directory does not exist: ~a" source))
 
-  (let* ((destination (build-file-name destination (basename source)))
-         (destination (fix-file-name destination))
+  (let+ ((destination (build-file-name destination (basename source))
+                      (=> fix-file-name))
          (source      (canonicalize-file-name source))
          (full-names  (find-files source regexp
                                   #:enter-tree? recursive?

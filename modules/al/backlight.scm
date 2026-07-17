@@ -42,15 +42,16 @@
 (define-lazy backlight-directory
   "Return system directory with backlight device.
 Return #f if no such directory found."
-  (let ((root-dir "/sys/class/backlight"))
-    (when-let ((subdirs (scandir root-dir))
-               (devices (filter (lambda (name)
-                                  (not (member name '("." ".."))))
-                                subdirs))
-               (device (and (not (null? devices))
-                            (car devices))))
-      (and (file-exists? (build-file-name root-dir device "brightness"))
-           (build-file-name root-dir device)))))
+  (let+ ((root-dir "/sys/class/backlight")
+         (subdirs  (scandir root-dir))
+         (devices  (filter (lambda (name)
+                             (not (member name '("." ".."))))
+                           subdirs)
+                   (<= (negate null?)))
+         (device   (car devices))
+         (br-file  (build-file-name root-dir device "brightness")
+                   (<= file-exists?)))
+    (build-file-name root-dir device)))
 
 (define (backlight-available?)
   "Return #t if backlight is available for the current machine."

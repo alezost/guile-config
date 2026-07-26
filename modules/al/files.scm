@@ -9,12 +9,12 @@
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
-
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
-
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -61,6 +61,7 @@
             first-existing-file
             with-directory-excursion
             unique-filename
+            subdirs
             find-files
             find-matching-files
             delete-file-recursively
@@ -205,6 +206,29 @@ Return #f if none of the FILES exists."
     (if (file-exists? filename)
         (unique-filename basename (+ i 1))
         filename)))
+
+(define* (subdirs dir #:optional full-names?)
+  "Return list of all sub-directories of DIR.
+
+If FULL-NAMES? is #f, return only dir names i.e., relative names without
+DIR itself.  Otherwise, return full absolute names.
+
+Return empty list if DIR does not exist."
+  (define (full-name name)
+    (build-file-name dir name))
+
+  (define (subdir? name)
+    (and (not (member name '("." "..")))
+         (catch 'system-error
+           (lambda ()
+             (file-is-directory? (full-name name)))
+           (const #f))))
+
+  (let ((names (or (scandir dir subdir?)
+                   '())))
+    (if full-names?
+      (map full-name names)
+      names)))
 
 (define* (find-files dir regexp #:key enter-tree? follow-links?)
   "Return list of files in DIR whose basenames match REGEXP.

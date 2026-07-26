@@ -28,6 +28,7 @@
 (define-module (al configs)
   #:use-module (srfi srfi-26)
   #:use-module (al let-macros)
+  #:use-module (al lists)
   #:use-module (al files)
   #:use-module (al links)
   #:use-module (al messages)
@@ -106,7 +107,7 @@ returned by NAME-PROC procedure."
   "Deploy (create symlinks) CONFIG record.
 See 'deploy-link' for the meaning of NAME-PROC."
   (let- ((links (config-links config)
-                (<= (negate null?)))
+                (<= not-null?))
          (name (config-name config)))
     (message0 "Deploying '~a' configuration..." name)
     (map (cut deploy-link <> name-proc) links)))

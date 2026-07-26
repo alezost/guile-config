@@ -28,12 +28,15 @@
   #:use-module (srfi srfi-1)
   #:use-module (srfi srfi-11)
   #:use-module (srfi srfi-26)
-  #:export (replace
+  #:export (not-null?
+            replace
             push!
             split
             map-indexed
             for-each-indexed
             count-indexed))
+
+(define not-null? (negate null?))
 
 (define (replace pred new lst)
   "Replace element of LST matching PRED with NEW element."

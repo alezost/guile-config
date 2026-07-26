@@ -30,6 +30,7 @@
 
 (define-module (al backlight)
   #:use-module (ice-9 ftw)
+  #:use-module (al lists)
   #:use-module (al files)
   #:use-module (al utils)
   #:use-module (al let-macros)
@@ -44,7 +45,7 @@
 Return #f if no such directory found."
   (let- ((root-dir "/sys/class/backlight")
          (devices  (subdirs root-dir)
-                   (<= (negate null?)))
+                   (<= not-null?))
          (device   (car devices))
          (br-file  (build-file-name root-dir device "brightness")
                    (<= file-exists?)))

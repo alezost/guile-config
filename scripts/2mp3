@@ -136,36 +136,36 @@ FFMPEG-OPTIONS is a string with output options for ffmpeg."
   (unless (file-exists? source)
     (leave "Source does not exist: ~a" source))
 
-  (let* ((source         (canonicalize-file-name source))
-         (source-is-dir? (file-is-directory? source))
-         (source-dir     (if source-is-dir?
-                           source
-                           (dirname source)))
-         (output-dir     (or destination source-dir))
-         (input-names    (if source-is-dir?
-                           (find-media-files source-dir recursive?)
-                           (list source))))
-    (if (null? input-names)
-      (begin
-        (print-output "No media files found in \"~a\"." source-dir)
-        (exit 0))
-      (let ((total (length input-names)))
-        (print-output "Number of files to convert: ~a." total)
-        (let* ((source-length (string-length source-dir))
-               (output (lambda (input-name)
-                         (mp3-file-name
-                          (build-file-name output-dir
-                                           (substring input-name
-                                                      source-length)))))
-               (successes (count-indexed
-                           (lambda (i input)
-                             (print-output "\f")
-                             (print-output "~a" (format-index (1+ i) total))
-                             (convert-file input (output input) ffmpeg-options))
-                           input-names))
-               (fails (- total successes)))
-          (print-output "~a files converted successfully, ~a failed."
-                        successes fails))))))
+  (if-let- ((source         (canonicalize-file-name source))
+            (source-is-dir? (file-is-directory? source))
+            (source-dir     (if source-is-dir?
+                              source
+                              (dirname source)))
+            (output-dir     (or destination source-dir))
+            (input-names    (if source-is-dir?
+                              (find-media-files source-dir recursive?)
+                              (list source))
+                            (<= null?)))
+    (begin
+      (print-output "No media files found in \"~a\"." source-dir)
+      (exit 0))
+    (let ((total (length input-names)))
+      (print-output "Number of files to convert: ~a." total)
+      (let* ((source-length (string-length source-dir))
+             (output (lambda (input-name)
+                       (mp3-file-name
+                        (build-file-name output-dir
+                                         (substring input-name
+                                                    source-length)))))
+             (successes (count-indexed
+                         (lambda (i input)
+                           (print-output "\f")
+                           (print-output "~a" (format-index (1+ i) total))
+                           (convert-file input (output input) ffmpeg-options))
+                         input-names))
+             (fails (- total successes)))
+        (print-output "~a files converted successfully, ~a failed."
+                      successes fails)))))
 
 (define (main arg0 . args)
   (if-letn ((opts   (parse-args args))

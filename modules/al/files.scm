@@ -243,19 +243,19 @@ If FOLLOW-LINKS? is #f, do not follow symbolic links."
   "Return list of files whose full names begin with FILENAME-PART.
 For example, (find-matching-files \"/foo/bar\") finds \"/foo/bar\",
 \"/foo/bar.scm\", \"/foo/barman\", etc."
-  (let ((dir (dirname filename-part)))
-    (if (file-exists? dir)
-        (let ((dir (if (symlink? dir)
-                       (canonicalize-path dir)
-                       dir))
-              (rx (string-append "\\`"
-                                 (regexp-quote
-                                  (basename filename-part)))))
-          (find-files dir rx))
-        (begin
-          (format (current-error-port)
-                  "Warning: No such directory: ~a~%" dir)
-          '()))))
+  (if-let- ((dir (dirname filename-part)
+                 (<= file-exists?))
+            (dir (if (symlink? dir)
+                   (canonicalize-path dir)
+                   dir))
+            (rx (string-append "\\`"
+                               (regexp-quote
+                                (basename filename-part)))))
+    (find-files dir rx)
+    (begin
+      (format (current-error-port)
+              "Warning: No such directory: ~a~%" dir)
+      '())))
 
 (define* (delete-file-recursively dir)
   "Delete DIR recursively, like `rm -rf', without following symlinks."

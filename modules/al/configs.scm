@@ -105,7 +105,7 @@ returned by NAME-PROC procedure."
 (define* (deploy-config config #:optional (name-proc unique-filename))
   "Deploy (create symlinks) CONFIG record.
 See 'deploy-link' for the meaning of NAME-PROC."
-  (let+ ((links (config-links config)
+  (let- ((links (config-links config)
                 (<= (negate null?)))
          (name (config-name config)))
     (message0 "Deploying '~a' configuration..." name)

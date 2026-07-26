@@ -42,7 +42,7 @@
 (define-lazy backlight-directory
   "Return system directory with backlight device.
 Return #f if no such directory found."
-  (let+ ((root-dir "/sys/class/backlight")
+  (let- ((root-dir "/sys/class/backlight")
          (subdirs  (scandir root-dir))
          (devices  (filter (lambda (name)
                              (not (member name '("." ".."))))

@@ -19,19 +19,22 @@
 
 ;;; Commentary:
 
-;; This file provides `let+' which is an augmented `let*' and
-;; `if-let'-like macros.  Along with usual (NAME EXPRESSION) bindings,
-;; all these macros accept (NAME EXPRESSION CLAUSES ...) forms.  See
-;; `let+' for details.
+;; This file provides augmented `let'-like macros.  Along with usual
+;; (NAME EXPRESSION) bindings, all macros accept (NAME EXPRESSION
+;; CLAUSES ...) forms.  See `if-let-' for details.
 
 ;;; Code:
 
 (define-module (al let-macros)
-  #:export (let+
-            if-let
+  #:export (let-                ; alias for `when-let-'
+            if-let              ; alias for `if-let+'
+            if-let-
+            if-let+
             if-let1
             if-letn
-            when-let
+            when-let            ; alias for `when-let+'
+            when-let-
+            when-let+
             when-let1
             when-letn))
 
@@ -45,25 +48,27 @@ expands to (PROCn ... (PROC2 (PROC1 EXPR)))."
     ((_ expr proc1 rest ...)
      (compose-call (proc1 expr) rest ...))))
 
-(define-syntax let+
+(define-syntax if-let-
   (syntax-rules (<= =>)
-    "Augmented `let*'.
+    "Augmented `let'-like construct.
 
 It has the following form:
 
-  (let+ ((NAME EXPRESSION [CLAUSES ...])
-         ...)
-    BODY
-    ...)
+  (if-let- ((NAME EXPRESSION [CLAUSES ...])
+            ...)
+    THEN
+    ELSE)
 
-If CLAUSES are not specified, then `let+' is equivalent to `let*'.
+If CLAUSES are not specified, then `if-let-' is equivalent to `let*'
+with THEN body (ELSE is not evaluated).
+
 Each clause from CLAUSES should have one of the following forms:
 
   (<= PROCEDURES ...)
 
     each procedure from PROCEDURES is called with NAME variable as a
-    single argument.  If any of them returns #f, `let+' exits
-    immediately with #f value without evaluating BODY.
+    single argument.  If any of them returns #f, `if-let-' evaluates
+    ELSE.  Otherwise, evaluate THEN.
 
   (=> PROCEDURES ...)
 
@@ -73,143 +78,173 @@ Each clause from CLAUSES should have one of the following forms:
 
 Example:
 
-  (let+ ((file \"/tmp/foo\"
-               (<= file-exists? symlink?)
-               (=> canonicalize-path)
-               (<= (cut string-suffix? \".scm\" <>))))
-    (basename file))
+  (if-let- ((file \"/tmp/foo\"
+                  (<= file-exists? symlink?)
+                  (=> canonicalize-path)
+                  (<= (cut string-suffix? \".scm\" <>))))
+    (basename file)
+    (begin
+      (format #t \"~a is not a suitable file~%\" file)
+      #f))
 
 Here, we check if FILE exists and is a symlink (there is no `symlink?'
 function in Guile by the way), and if so, file name is canonicalized.
 Finally, if the canonical name ends with \".scm\", its basename is
-returned.  So the above `let+' expands to something like this:
+returned.  If any check fails (i.e., if file does not exist or is not a
+symlink or its canonical name does not end with \".scm\"), a message is
+displayed and #f is returned.
 
-  (let* ((file \"/tmp/foo\")
-         (file (and (file-exists? file)
-                    (symlink? file)
-                    file)))
-    (and file
-         (let* ((file (canonicalize-path file))
-                (file (and ((cut string-suffix? \".scm\" <>) file)
-                           file)))
-           (and file (basename file)))))"
+So the above `if-let-' expands to this:
+
+(let ((file \"/tmp/foo\"))
+  (if (and (file-exists? file) (symlink? file))
+      (let ((file (canonicalize-path file)))
+        (if ((cut string-suffix? \".scm\" <>) file)
+            (basename file)
+            (begin (format #t \"~a is not a suitable file~%\" file) #f)))
+      (begin (format #t \"~a is not a suitable file~%\" file) #f)))"
 
     ;; Base case: a single binding without extra clauses.
-    ((let+ () body ...)
-     (begin body ...))
+    ((_ () then else)
+     then)
 
     ;; Multiple bindings without extra clauses: reduce bindings.
-    ((let+ ((var expr)
-            rest-bindings ...)
-       body ...)
+    ((if-let- ((var expr)
+               rest-bindings ...)
+       then else)
      (let ((var expr))
-       (let+ (rest-bindings ...)
-         body ...)))
+       (if-let- (rest-bindings ...)
+         then else)))
 
     ;; Multiple bindings with extra <= clause: reduce clauses.
-    ((let+ ((var expr
-                 (<= procedures ...))
-            rest-bindings ...)
-       body ...)
-     (when-letn ((var expr)
-                 (var (and (procedures var) ... var)))
-       (let+ (rest-bindings ...)
-         body ...)))
+    ((if-let- ((var expr
+                    (<= procedures ...))
+               rest-bindings ...)
+       then else)
+     (let ((var expr))
+       (if (and (procedures var) ...)
+         (if-let- (rest-bindings ...)
+           then else)
+         else)))
 
-    ((let+ ((var expr
-                 (<= procedures ...)
-                 rest-clauses ...)
-            rest-bindings ...)
-       body ...)
-     (when-letn ((var expr)
-                 (var (and (procedures var) ... var)))
-       (let+ ((var var
-                   rest-clauses ...)
-              rest-bindings ...)
-         body ...)))
+    ((if-let- ((var expr
+                    (<= procedures ...)
+                    rest-clauses ...)
+               rest-bindings ...)
+       then else)
+     (let ((var expr))
+       (if (and (procedures var) ...)
+         (if-let- ((var var
+                        rest-clauses ...)
+                   rest-bindings ...)
+           then else)
+         else)))
 
     ;; Multiple bindings with extra => clause: reduce clauses.
-    ((let+ ((var expr
-                 (=> procedures ...)
-                 rest-clauses ...)
-            rest-bindings ...)
-       body ...)
-     (let+ ((var (compose-call expr procedures ...)
-                 rest-clauses ...)
-            rest-bindings ...)
-       body ...))))
+    ((if-let- ((var expr
+                    (=> procedures ...)
+                    rest-clauses ...)
+               rest-bindings ...)
+       then else)
+     (if-let- ((var (compose-call expr procedures ...)
+                    rest-clauses ...)
+               rest-bindings ...)
+       then else))
 
-(define-syntax if-let
+    ;; No else clause.
+    ((_ bindings then)
+     (if-let- bindings then #f))))
+
+(define-syntax if-let+
   (syntax-rules (<= =>)
     "Usual `if-let' construct with optional auxiliary CLAUSES.
 
 It has the following form:
 
-  (if-let ((NAME EXPRESSION [CLAUSES ...])
-           ...)
+  (if-let+ ((NAME EXPRESSION [CLAUSES ...])
+            ...)
     THEN
     ELSE)
 
-See `let+' for the meaning of CLAUSES.
+See `if-let-' for the meaning of CLAUSES.
 
-If all NAME variables pass all checks, evaluate THEN.  Otherwise (if
-NAME is #f or if one of the CLAUSES returns #f), evaluate ELSE."
+If all NAME variables pass all checks, evaluate THEN.
+Otherwise, evaluate ELSE.
+
+The difference between `if-let-' and `if-let+' is the following:
+`if-let-' evaluates ELSE if any \"<=\" clause returns #f;
+`if-let+' evaluates ELSE if any \"<=\" clause or \"=>\" clause or NAME
+value is #f."
 
     ;; Base case: no bindings.
     ((_ () then else)
      then)
 
     ;; Multiple bindings without extra clauses: reduce bindings.
-    ((if-let ((var expr)
-              rest-bindings ...)
+    ((if-let+ ((var expr)
+               rest-bindings ...)
        then else)
      (let ((var expr))
        (if var
-         (if-let (rest-bindings ...) then else)
+         (if-let+ (rest-bindings ...)
+           then else)
          else)))
 
     ;; Multiple bindings with extra <= clause: reduce clauses.
-    ((if-let ((var expr
-                   (<= procedures ...)
-                   rest-clauses ...)
-              rest-bindings ...)
+    ((if-let+ ((var expr
+                    (<= procedures ...))
+               rest-bindings ...)
        then else)
      (let ((var expr))
-       (if-let ((var (and var (procedures var) ... var)
-                     rest-clauses ...)
-                rest-bindings ...)
-         then else)))
+       (if (and var (procedures var) ...)
+         (if-let+ (rest-bindings ...)
+           then else)
+         else)))
+
+    ((if-let+ ((var expr
+                    (<= procedures ...)
+                    rest-clauses ...)
+               rest-bindings ...)
+       then else)
+     (let ((var expr))
+       (if (and var (procedures var) ...)
+         (if-let+ ((var var
+                        rest-clauses ...)
+                   rest-bindings ...)
+           then else)
+         else)))
 
     ;; Multiple bindings with extra => clause: reduce clauses.
-    ((if-let ((var expr
-                   (=> procedures ...))
-              rest-bindings ...)
+    ((if-let+ ((var expr
+                    (=> procedures ...))
+               rest-bindings ...)
        then else)
-     (if-let ((var expr)
-              (var (procedures var))
-              ...
-              rest-bindings ...)
+     (if-let+ ((var expr)
+               (var (procedures var))
+               ...
+               rest-bindings ...)
        then else))
-    ((if-let ((var expr
-                   (=> procedures ...)
-                   rest-clauses ...)
-              rest-bindings ...)
+
+    ((if-let+ ((var expr
+                    (=> procedures ...)
+                    rest-clauses ...)
+               rest-bindings ...)
        then else)
-     (if-let ((var expr)
-              (var (procedures var))
-              ...
-              (var var
-                   rest-clauses ...)
-              rest-bindings ...)
+     (if-let+ ((var expr)
+               (var (procedures var))
+               ...
+               (var var
+                    rest-clauses ...)
+               rest-bindings ...)
        then else))
 
     ;; No else clause.
     ((_ bindings then)
-     (if-let bindings then #f))))
+     (if-let+ bindings then #f))))
 
 (define-syntax if-let1
   (syntax-rules ()
-    "Call `if-let' on the first binding and `let+' on the rest.
+    "Call `if-let+' on the first binding and `if-let-' on the rest.
 
 For example,
 
@@ -221,24 +256,25 @@ For example,
 
 expands to
 
-  (if-let ((a 1))
-    (let+ ((b 2)
-           (c 3))
-      (+ a b c))
+  (if-let+ ((a 1))
+    (if-let- ((b 2)
+              (c 3))
+      (+ a b c)
+      0)
     0)"
     ((_ () then else)
      then)
     ((_ (first rest ...) then else)
-     (if-let (first)
-       (let+ (rest ...)
-         then)
+     (if-let+ (first)
+       (if-let- (rest ...)
+         then else)
        else))
     ((_ bindings then)
      (if-let1 bindings then #f))))
 
 (define-syntax if-letn
   (syntax-rules ()
-    "Call `if-let' on the last binding and `let+' on the rest.
+    "Call `if-let+' on the last binding and `if-let-' on the rest.
 
 For example,
 
@@ -250,28 +286,32 @@ For example,
 
 expands to
 
-  (let+ ((a 1)
-         (b 2))
-    (if-let ((c 3))
+  (if-let- ((a 1)
+            (b 2))
+    (if-let+ ((c 3))
       (+ a b c)
-      0))"
+      0)
+    0)"
     ((_ () then else)
      then)
+    ((_ (binding) then else)
+     (if-let+ (binding) then else))
     ((_ (first rest ...) then else)
-     (let+ (first)
+     (if-let- (first)
        (if-letn (rest ...)
-         then
-         else)))
+         then else)
+       else))
     ((_ bindings then)
-     (if-let1 bindings then #f))))
+     (if-letn bindings then #f))))
 
-(define-syntax-rule (when-let bindings body ...)
-  "`if-let' without ELSE clause.
-The difference between `when-let' and `let+' is the following.
-`let+' does not evaluate its BODY only if \"<=\" clause returns #f,
-`when-let' does not evaluate its BODY if any clause or variable value is
-#f."
-  (if-let bindings
+(define-syntax-rule (when-let- bindings body ...)
+  "`if-let-' without ELSE clause."
+  (if-let- bindings
+    (begin body ...)))
+
+(define-syntax-rule (when-let+ bindings body ...)
+  "`if-let+' without ELSE clause."
+  (if-let+ bindings
     (begin body ...)))
 
 (define-syntax-rule (when-let1 bindings body ...)
@@ -283,5 +323,17 @@ The difference between `when-let' and `let+' is the following.
   "`if-letn' without ELSE clause."
   (if-letn bindings
     (begin body ...)))
+
+(define-syntax-rule (let- args ...)
+  "Alias for `when-let-'."
+  (when-let- args ...))
+
+(define-syntax-rule (if-let args ...)
+  "Alias for `if-let+'."
+  (if-let+ args ...))
+
+(define-syntax-rule (when-let args ...)
+  "Alias for `when-let+'."
+  (when-let+ args ...))
 
 ;;; let-macros.scm ends here
